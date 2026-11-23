@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>未命名空间</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C87B5C'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --c-bg: #F6F1E7; --c-panel: #FFFFFF; --c-line: #E5E5E5;
+    --c-text: #333333; --c-dim: #888888;
+    --c-accent: #667F99; --c-accent-text: #FFFFFF;
+    --c-bubble-npc: #FFFFFF; --c-bubble-user: #667F99; --c-bubble-user-text: #FFFFFF;
+    --c-shadow: rgba(0, 0, 0, 0.05); --c-shadow-heavy: rgba(0, 0, 0, 0.15);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body { background-color: var(--c-bg); color: var(--c-text); font-family: var(--font-ui); transition: background-color 0.3s, color 0.3s; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--c-line); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--c-accent); }
+  svg { display: block; }
+  button, .btn { transition: transform 0.1s, background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer; }
+  button:active, .btn:active { transform: scale(0.96); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  input[type="text"], input[type="password"], input[type="number"], textarea, select { 
+    width: 100%; background: var(--c-bg); border: 1px solid var(--c-line); 
+    color: var(--c-text); border-radius: 8px; padding: 10px 12px; font-size: 14px; 
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s; font-family: inherit;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--c-shadow-heavy); }
+  textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+  #toast-container { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+  .toast { background: var(--c-panel); color: var(--c-text); padding: 10px 20px; border-radius: 99px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 16px var(--c-shadow-heavy); border: 1px solid var(--c-line); animation: toastIn 0.3s forwards; }
+  .toast.out { animation: toastOut 0.3s forwards; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes toastOut { to { opacity: 0; transform: translateY(-10px); } }
+
+  .app { display: flex; height: 100vh; height: 100dvh; overflow: hidden; }
+
+  .sidebar { width: 64px; flex-shrink: 0; background: var(--c-panel); border-right: 1px solid var(--c-line); display: flex; flex-direction: column; padding: 16px 0; z-index: 100; overflow: hidden; white-space: nowrap; transition: width 0.3s; }
+  .sidebar:hover, .sidebar.open { width: 200px; padding: 16px 10px; }
+  .brand { display: flex; align-items: center; gap: 12px; padding: 8px; color: var(--c-accent); margin-bottom: 20px; font-weight: 800; font-size: 16px; cursor: pointer; }
+  .brand svg { width: 24px; height: 24px; flex-shrink: 0; margin-left: 6px; }
+  .brand span { opacity: 0; transition: opacity 0.2s; }
+  .sidebar:hover .brand span, .sidebar.open .brand span { opacity: 1; }
+  .sidebar nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .nav-btn { display: flex; align-items: center; gap: 12px; background: none; border: none; color: var(--c-dim); padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; text-align: left; }
+  .nav-btn svg { width: 20px; height: 20px; flex-shrink: 0; margin-left: 8px; }
+  .nav-btn span { opacity: 0; transition: opacity 0.2s; }
+  .sidebar:hover .nav-btn span, .sidebar.open .nav-btn span { opacity: 1; }
+  .nav-btn.active { background: var(--c-accent); color: var(--c-accent-text); }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; background: var(--c-bg); }
+  .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+  .page.active { display: flex; }
+
+  .topbar { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 16px; flex-shrink: 0; background: var(--c-panel); border-bottom: 1px solid var(--c-line); }
+  .topbar h2 { font-size: 18px; font-weight: 800; }
+  .topbar .spacer { flex: 1; }
+  .menu-toggle { display: none; background: none; border: none; color: var(--c-text); padding: 8px; }
+  .menu-toggle svg { width: 24px; height: 24px; }
+  .scroll { flex: 1; overflow-y: auto; padding: 16px; }
+
+  .room-list { display: flex; flex-direction: column; gap: 10px; }
+  .room-item { display: flex; align-items: center; gap: 12px; background: var(--c-panel); padding: 16px; border-radius: 12px; border: 1px solid var(--c-line); cursor: pointer; }
+  .room-item:hover { border-color: var(--c-accent); }
+  .room-avatar { width: 48px; height: 48px; border-radius: 12px; background: var(--c-bg); color: var(--c-accent); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0; }
+  .room-info { flex: 1; min-width: 0; }
+  .room-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .room-desc { font-size: 13px; color: var(--c-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .empty-state { text-align: center; color: var(--c-dim); padding: 60px 20px; font-size: 14px; }
+
+  .char-item { display: flex; gap: 12px; background: var(--c-panel); padding: 16px; border-radius: 12px; border: 1px solid var(--c-line); margin-bottom: 12px; }
+  .char-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--c-accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0; overflow: hidden; }
+  .char-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .char-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .char-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .char-name { font-size: 16px; font-weight: 800; }
+  .char-meta { font-size: 12px; color: var(--c-dim); margin-bottom: 6px; }
+  .char-bg-preview { font-size: 13px; color: var(--c-text); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; opacity: 0.8; }
+
+  .chat-header { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 16px; background: var(--c-panel); border-bottom: 1px solid var(--c-line); flex-shrink: 0; }
+  .back-btn { background: none; border: none; color: var(--c-text); padding: 8px; display: flex; }
+  .back-btn svg { width: 24px; height: 24px; }
+  #chat-room-name { font-size: 16px; font-weight: 700; flex: 1; outline: none; border: 1px solid transparent; background: transparent; color: var(--c-text); padding: 4px 8px; border-radius: 6px; }
+  #chat-room-name:focus { border-color: var(--c-line); background: var(--c-bg); }
+  .chat-settings-btn { background: none; border: none; color: var(--c-dim); padding: 8px; }
+  .chat-settings-btn:hover { color: var(--c-accent); }
+
+  #chat-stream { flex: 1; overflow-y: auto; padding: 16px 20px 160px 20px; display: flex; flex-direction: column; gap: 16px; }
+
+  .msg-row { display: flex; gap: 10px; align-items: flex-start; max-width: 85%; position: relative; }
+  .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; overflow: hidden; background: var(--c-accent); color: var(--c-accent-text); }
+  .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .msg-avatar.user { background: var(--c-dim); color: #fff; }
+  .msg-content { display: flex; flex-direction: column; gap: 4px; min-width: 0; position: relative; }
+  .msg-row.user .msg-content { align-items: flex-end; }
+
+  .msg-actions {
+    display: none;
+    align-items: center;
+    gap: 2px;
+    margin-top: 6px;
+    align-self: flex-start;
+    background: var(--c-panel);
+    border: 1px solid var(--c-line);
+    border-radius: 99px;
+    padding: 4px;
+    box-shadow: 0 2px 8px var(--c-shadow);
+    flex-wrap: wrap;
+  }
+  .msg-row.user .msg-actions { align-self: flex-end; }
+  .msg-wrapper .msg-actions { align-self: center; margin-top: 8px; }
+  .msg-row.show-actions .msg-actions,
+  .msg-wrapper.show-actions .msg-actions { display: flex; }
+
+  .msg-action-btn { background: none; border: none; border-radius: 50px; height: 28px; min-width: 28px; padding: 0 8px; display: flex; align-items: center; justify-content: center; color: var(--c-dim); font-size: 12px; }
+  .msg-action-btn:hover { color: var(--c-text); background: var(--c-bg); }
+  .msg-action-btn.danger:hover { color: #e74c3c; }
+
+  .bubble { padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; box-shadow: 0 2px 6px var(--c-shadow); }
+  .msg-row.npc .bubble { background: var(--c-bubble-npc); border-top-left-radius: 4px; border: 1px solid var(--c-line); }
+  .msg-row.user .bubble { background: var(--c-bubble-user); color: var(--c-bubble-user-text); border-top-right-radius: 4px; }
+
+  .msg-center { max-width: 90%; text-align: center; font-size: 13px; line-height: 1.6; padding: 6px 16px; border-radius: 99px; cursor: pointer; }
+  .msg-center.narration { color: var(--c-dim); font-style: italic; background: rgba(0,0,0,0.03); }
+  .msg-center.system { color: #8b5cf6; background: rgba(139, 92, 246, 0.1); border: 1px dashed rgba(139, 92, 246, 0.4); font-weight: 600; }
+
+  .msg-wrapper { display: flex; flex-direction: column; align-items: center; position: relative; margin: 6px 0; }
+
+  .typing-bubble { display: flex; align-items: center; gap: 4px; padding: 14px 20px; background: var(--c-bubble-npc); border-radius: 16px; border-top-left-radius: 4px; border: 1px solid var(--c-line); width: fit-content; }
+  .typing-dot { width: 6px; height: 6px; background: var(--c-dim); border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
+  .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+  @keyframes typing { 0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
+
+  .cursor { display: inline-block; animation: blink 1s steps(1) infinite; opacity: 0.7; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  #input-wrapper { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 16px; padding-bottom: calc(12px + var(--safe-bottom)); background: linear-gradient(transparent, var(--c-bg) 30%); display: flex; flex-direction: column; align-items: center; z-index: 60; }
+  #char-carousel { display: flex; gap: 8px; margin-bottom: 8px; width: 100%; max-width: 800px; overflow-x: auto; scrollbar-width: none; }
+  #char-carousel::-webkit-scrollbar { display: none; }
+  .char-pill { display: flex; align-items: center; gap: 8px; background: var(--c-panel); border: 1px solid var(--c-line); padding: 4px 12px 4px 4px; border-radius: 99px; flex-shrink: 0; cursor: pointer; }
+  .char-pill .avatar { width: 24px; height: 24px; border-radius: 50%; font-size: 12px; overflow: hidden; background: var(--c-accent); color:#fff; display:flex; align-items:center; justify-content:center;}
+  .char-pill .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .char-pill .name { font-size: 13px; font-weight: 600; }
+
+  .input-container { width: 100%; max-width: 800px; background: var(--c-panel); border: 1px solid var(--c-line); border-radius: 20px; padding: 8px 12px; display: flex; flex-direction: column; box-shadow: 0 4px 20px var(--c-shadow); }
+  #director-area { display: none; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--c-line); }
+  #director-area.show { display: flex; gap: 8px; }
+  #director-input { flex: 1; background: transparent; border: none; color: #d35400; font-size: 13px; outline: none; resize: none; height: 40px; }
+  #user-input { width: 100%; background: transparent; border: none; color: var(--c-text); padding: 8px 4px; font-size: 15px; resize: none; min-height: 40px; max-height: 120px; outline: none; }
+  .input-toolbar { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .tool-btn { display: flex; align-items: center; gap: 4px; background: var(--c-bg); border: 1px solid var(--c-line); color: var(--c-dim); border-radius: 99px; padding: 4px 10px; font-size: 12px; }
+  .tool-btn.active.think { color: #8b5cf6; border-color: #8b5cf6; }
+  .tool-btn.active.director { color: #d35400; border-color: #d35400; }
+  #send-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--c-accent); color: var(--c-accent-text); border: none; display: flex; align-items: center; justify-content: center; }
+  #send-btn svg { width: 18px; height: 18px; margin-right: 2px; }
+
+  .app-card { background: var(--c-panel); border: 1px solid var(--c-line); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+  .app-card h3 { font-size: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+  label { display: block; font-size: 12px; color: var(--c-dim); margin: 12px 0 6px; }
+  .check-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+  .check-item input { width: 18px; height: 18px; accent-color: var(--c-accent); }
+
+  .color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .color-item { display: flex; align-items: center; justify-content: space-between; background: var(--c-bg); border: 1px solid var(--c-line); padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+  .color-item input[type="color"] { width: 28px; height: 28px; padding: 0; border: none; background: none; cursor: pointer; }
+
+  .lore-entries { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .lore-entry { background: var(--c-bg); padding: 8px; border-radius: 8px; border: 1px solid var(--c-line); }
+  .lore-entry-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .lore-entry-row input { flex: 1; }
+
+  button.btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; border-radius: 8px; font-size: 14px; border: 1px solid var(--c-line); background: var(--c-panel); color: var(--c-text); }
+  button.btn.primary { background: var(--c-accent); color: var(--c-accent-text); border-color: var(--c-accent); }
+  button.btn.danger { color: #e74c3c; border-color: #e74c3c; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .row > * { flex: 1; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s; }
+  .modal-overlay.show { display: flex; opacity: 1; }
+  .modal-content { background: var(--c-panel); width: 90%; max-width: 500px; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: scale(0.95); transition: transform 0.2s; max-height: 85vh; overflow-y: auto; }
+  .modal-overlay.show .modal-content { transform: scale(1); }
+  .modal-header { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+  .modal-body { font-size: 14px; color: var(--c-dim); line-height: 1.6; margin-bottom: 20px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  .pwd-wrap { position: relative; }
+  .pwd-wrap input { padding-right: 40px; }
+  .eye-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--c-dim); padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .eye-btn:hover { color: var(--c-accent); }
+
+  .avatar-upload { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+  .avatar-preview { width: 64px; height: 64px; border-radius: 50%; background: var(--c-bg); border: 2px dashed var(--c-line); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; cursor: pointer; }
+  .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-preview svg { width: 24px; height: 24px; color: var(--c-dim); }
+
+  @media (max-width: 768px) {
+    .sidebar { position: fixed; top: 0; bottom: 0; left: 0; transform: translateX(-100%); width: 200px; padding: 16px 10px; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar .brand span, .sidebar .nav-btn span { opacity: 1; }
+    .menu-toggle { display: flex; }
+    .overlay { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 90; }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .modal-content { width: 95%; }
+  }
+
+/* ================= 开场动画 ================= */
+#intro-overlay {
+  position: fixed; inset: 0; z-index: 9999; background: var(--c-bg); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity .5s ease .5s, visibility .5s ease .5s;
+}
+#intro-overlay.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+.logo-container { text-align: center; pointer-events: none; }
+.logo-svg { width: 80px; height: 80px; color: #667F99; margin: 0 auto 20px auto; }
+.logo-svg path { stroke-dasharray: 100; stroke-dashoffset: 100; animation: drawLine .8s cubic-bezier(.4,0,.2,1) forwards; }
+.logo-svg path:nth-child(1) { animation-delay: 0s; }
+.logo-svg path:nth-child(2) { animation-delay: .2s; }
+@keyframes drawLine { to { stroke-dashoffset: 0; } }
+.intro-text { font-size: 22px; font-weight: 800; color: var(--c-text); letter-spacing: 2px; opacity: 0; animation: fadeInUp .4s ease .6s forwards; }
+.intro-sub { font-size: 13px; color: var(--c-dim); margin-top: 8px; letter-spacing: 1px; opacity: 0; animation: fadeInUp .4s ease .8s forwards; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div id="intro-overlay" onclick="hideIntro()" title="点击跳过">
+  <div class="logo-container">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-svg">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path d="M8 9h8M8 13h5" />
+    </svg>
+    <div class="intro-text">未命名空间</div>
+    <div class="intro-sub">让故事，从一句话开始</div>
+  </div>
+</div>
+
+<div id="overlay" class="overlay" onclick="toggleSidebar(false)"></div>
+<div id="toast-container"></div>
+
+<div class="modal-overlay" id="global-modal">
+  <div class="modal-content">
+    <div class="modal-header" id="modal-title">提示</div>
+    <div class="modal-body" id="modal-desc"></div>
+    <input type="text" id="modal-input" style="display:none; margin-bottom:20px;">
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" id="modal-confirm-btn">确认</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>未命名</span>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-page="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>频道列表</span></button>
+      <button class="nav-btn" data-page="chars"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>角色库</span></button>
+      <button class="nav-btn" data-page="lore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>世界书库</span></button>
+      <button class="nav-btn" data-page="player"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>我的设定</span></button>
+      <button class="nav-btn" data-page="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>设置</span></button>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <section class="page active" id="page-list">
+      <div class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <h2>频道列表</h2>
+        <div class="spacer"></div>
+        <button class="btn primary" onclick="createRoom()">+ 新建</button>
+      </div>
+      <div class="scroll"><div class="room-list" id="room-list"></div></div>
+    </section>
+
+    <section class="page" id="page-chat">
+      <div class="chat-header">
+        <button class="back-btn" onclick="switchPage('list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <input type="text" id="chat-room-name" onchange="saveRoomName()" placeholder="未命名频道">
+        <button class="chat-settings-btn" onclick="openRoomSettings()" title="频道设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      </div>
+      <div id="chat-stream"></div>
+      <div id="input-wrapper">
+        <div id="char-carousel"></div>
+        <div class="input-container">
+          <div id="director-area">
+            <textarea id="director-input" placeholder="导演指令..."></textarea>
+          </div>
+          <textarea id="user-input" rows="1" placeholder="输入你的行动或对白..."></textarea>
+          <div class="input-toolbar">
+            <button class="tool-btn" id="btn-director" onclick="toggleDirector()">导演</button>
+            <button class="tool-btn" id="btn-think" onclick="toggleThink()">思考</button>
+            <div class="spacer" style="flex:1;"></div>
+            <button id="send-btn" onclick="sendMessage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-chars">
+      <div class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <h2>角色库</h2>
+        <div class="spacer"></div>
+        <button class="btn" onclick="document.getElementById('char-import-file').click()">导入</button>
+        <button class="btn primary" onclick="openCharModal()">+ 新建</button>
+        <input type="file" id="char-import-file" accept=".json" style="display:none" onchange="importCharFile(event)">
+      </div>
+      <div class="scroll" id="char-list"></div>
+    </section>
+
+    <section class="page" id="page-lore">
+      <div class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <h2>世界书库</h2>
+        <div class="spacer"></div>
+        <button class="btn" onclick="document.getElementById('lore-import-file').click()">导入</button>
+        <button class="btn primary" onclick="addLore()">+ 新建</button>
+        <input type="file" id="lore-import-file" accept=".json,.txt" style="display:none" onchange="importLoreFile(event)">
+      </div>
+      <div class="scroll" id="lore-list"></div>
+    </section>
+
+    <section class="page" id="page-player">
+      <div class="topbar"><button class="menu-toggle" onclick="toggleSidebar(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><h2>我的设定</h2></div>
+      <div class="scroll">
+        <div class="app-card">
+          <label>姓名</label><input type="text" id="player-name">
+          <div class="row"><div><label>性别</label><input type="text" id="player-gender"></div><div><label>年龄</label><input type="text" id="player-age"></div></div>
+          <label>外貌</label><textarea id="player-appearance" style="min-height:100px;"></textarea>
+          <label>背景</label><textarea id="player-background" style="min-height:150px;"></textarea>
+          <button class="btn primary" style="width:100%; margin-top:16px;" onclick="savePlayer()">保存</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-config">
+      <div class="topbar"><button class="menu-toggle" onclick="toggleSidebar(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><h2>设置</h2></div>
+      <div class="scroll">
+        <div class="app-card">
+          <h3>外观调色盘</h3>
+          <div class="color-grid">
+            <div class="color-item"><span>主色调</span><input type="color" id="c-accent" onchange="updateColors()"></div>
+            <div class="color-item"><span>背景色</span><input type="color" id="c-bg" onchange="updateColors()"></div>
+            <div class="color-item"><span>AI气泡</span><input type="color" id="c-bubble-npc" onchange="updateColors()"></div>
+            <div class="color-item"><span>我的气泡</span><input type="color" id="c-bubble-user" onchange="updateColors()"></div>
+          </div>
+        </div>
+
+        <div class="app-card">
+          <h3>接口配置</h3>
+          <label>服务商</label>
+          <select id="cfg-provider" onchange="changeProvider()">
+            <option value="deepseek">DeepSeek 官方</option>
+            <option value="siliconflow">硅基流动 (SiliconFlow)</option>
+            <option value="openai">OpenAI 官方</option>
+            <option value="custom">自定义 / 中转商</option>
+          </select>
+          <label>接口地址</label>
+          <input type="text" id="cfg-base" placeholder="选中服务商后自动填充">
+          <label style="display:flex; justify-content:space-between; align-items:center;">
+            <span>密钥</span>
+            <span onclick="pasteKey()" style="color:var(--c-accent); cursor:pointer; font-weight:600; font-size:12px;">一键粘贴</span>
+          </label>
+          <div class="pwd-wrap">
+            <input type="password" id="cfg-key" placeholder="sk-..." onblur="autoFetchModelsAndBalance()">
+            <button type="button" class="eye-btn" onclick="togglePwd()">
+              <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <label>模型 ID</label>
+          <input type="text" id="cfg-model" list="model-list" placeholder="填写或自动拉取模型">
+          <datalist id="model-list"></datalist>
+          <div class="row" style="margin-top:16px;">
+            <div style="flex:1; font-size:12px; color:var(--c-dim); line-height:2.5;" id="balance-display">余额: --</div>
+            <button class="btn primary" onclick="saveConfig()">保存配置</button>
+          </div>
+        </div>
+        
+        <div class="app-card">
+          <h3>数据备份</h3>
+          <div class="row" style="margin-bottom:10px;">
+            <button class="btn" style="flex:1;" onclick="exportAll()">导出备份</button>
+            <button class="btn" style="flex:1;" onclick="document.getElementById('import-file').click()">导入备份</button>
+          </div>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importAll(event)">
+          <button class="btn danger" style="width:100%; margin-top:8px;" onclick="resetAll()">清空所有数据</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="modal-overlay" id="char-modal">
+  <div class="modal-content">
+    <div class="modal-header">编辑角色</div>
+    <div class="avatar-upload">
+      <div class="avatar-preview" id="m-char-avatar-preview" onclick="document.getElementById('m-char-avatar-file').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:14px; font-weight:700; margin-bottom:4px;">角色头像</div>
+        <div style="font-size:12px; color:var(--c-dim);">点击左侧圆圈选择图片（自动压缩）</div>
+      </div>
+      <input type="file" id="m-char-avatar-file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+    </div>
+    <input type="hidden" id="m-char-key">
+    <label>姓名</label><input type="text" id="m-char-name">
+    <div class="row"><div><label>性别</label><input type="text" id="m-char-gender"></div><div><label>年龄</label><input type="text" id="m-char-age"></div></div>
+    <label>外貌</label><textarea id="m-char-appearance" style="min-height:80px;"></textarea>
+    <label>背景与设定</label><textarea id="m-char-background" style="min-height:200px;" placeholder="支持输入长文本设定..."></textarea>
+    <div class="modal-footer">
+      <button class="btn" onclick="document.getElementById('char-modal').classList.remove('show')">取消</button>
+      <button class="btn primary" onclick="saveCharacter()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="room-modal">
+  <div class="modal-content">
+    <div class="modal-header">频道配置舱</div>
+    <label>包含的角色（不勾选则不在本频道出现）</label>
+    <div id="room-char-checks" style="background:var(--c-bg); padding:12px; border-radius:8px; max-height:150px; overflow-y:auto;"></div>
+    <label style="margin-top:16px;">绑定的世界书</label>
+    <div id="room-lore-checks" style="background:var(--c-bg); padding:12px; border-radius:8px; max-height:150px; overflow-y:auto;"></div>
+    <label style="margin-top:16px;">频道专属记忆（AI 自动追加，也可手动改）</label>
+    <textarea id="room-memory" style="min-height:150px;" placeholder="例如：两人在酒吧相遇，某某送过主角一把剑..."></textarea>
+    <div class="row" style="margin-top:16px;">
+      <button class="btn" style="flex:1;" onclick="exportChat()">导出聊天记录</button>
+      <button class="btn danger" style="flex:1;" onclick="clearChat()">清空聊天记录</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="document.getElementById('room-modal').classList.remove('show')">取消</button>
+      <button class="btn primary" onclick="saveRoomSettings()">保存配置</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let rooms = [], characters = [], lorebooks = [], messages = [];
+let currentRoomId = null;
+let player = {}, config = {};
+let enableThink = false;
+let db;
+
+const DB_NAME = 'unnamed_rp_v2';
+
+const PROVIDERS = {
+  deepseek: { base: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+  siliconflow: { base: 'https://api.siliconflow.cn/v1', model: 'deepseek-ai/DeepSeek-V3' },
+  openai: { base: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+  custom: { base: '', model: '' }
+};
+
+let modalResolve = null;
+function showModal(title, desc, isPrompt, defaultValue, isDanger) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-desc').textContent = desc;
+  const input = document.getElementById('modal-input');
+  const btn = document.getElementById('modal-confirm-btn');
+  if (isPrompt) {
+    input.style.display = 'block';
+    input.value = defaultValue || '';
+    setTimeout(() => input.focus(), 100);
+  } else {
+    input.style.display = 'none';
+  }
+  if (isDanger) btn.className = 'btn danger';
+  else btn.className = 'btn primary';
+  document.getElementById('global-modal').classList.add('show');
+  return new Promise(resolve => {
+    modalResolve = (val) => {
+      document.getElementById('global-modal').classList.remove('show');
+      resolve(val);
+    };
+  });
+}
+function closeModal() { if (modalResolve) modalResolve(null); }
+document.getElementById('modal-confirm-btn').onclick = () => {
+  const input = document.getElementById('modal-input');
+  const val = input.style.display === 'block' ? input.value.trim() : true;
+  if (modalResolve) modalResolve(val);
+};
+document.getElementById('global-modal').onclick = (e) => {
+  if (e.target.id === 'global-modal') closeModal();
+};
+
+function togglePwd() {
+  const input = document.getElementById('cfg-key');
+  const icon = document.getElementById('eye-icon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+  } else {
+    input.type = 'password';
+    icon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  }
+}
+function changeProvider() {
+  const p = document.getElementById('cfg-provider').value;
+  if (PROVIDERS[p]) {
+    document.getElementById('cfg-base').value = PROVIDERS[p].base;
+    document.getElementById('cfg-model').value = PROVIDERS[p].model;
+  }
+}
+async function pasteKey() {
+  try {
+    const txt = await navigator.clipboard.readText();
+    document.getElementById('cfg-key').value = txt.trim();
+    showToast('已粘贴');
+    autoFetchModelsAndBalance();
+  } catch { showToast('读取失败'); }
+}
+async function autoFetchModelsAndBalance() {
+  const base = document.getElementById('cfg-base').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('cfg-key').value.trim();
+  if (!base || !key) return;
+  const modelInput = document.getElementById('cfg-model');
+  const datalist = document.getElementById('model-list');
+  const balanceDisplay = document.getElementById('balance-display');
+  balanceDisplay.textContent = '余额: 查询中...';
+  try {
+    const res = await fetch(`${base}/models`, { headers: { 'Authorization': 'Bearer ' + key } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.data && data.data.length) {
+        datalist.innerHTML = data.data.map(m => `<option value="${m.id}">`).join('');
+        if (!modelInput.value) modelInput.value = data.data[0].id;
+        showToast('模型列表已更新');
+      }
+    }
+  } catch (err) {}
+  try {
+    const isDeepSeek = base.includes('deepseek');
+    let url = isDeepSeek ? base.replace('/v1', '/user/balance') : `${base}/user/balance`;
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + key } });
+    if (res.ok) {
+      const data = await res.json();
+      let bal = '未知';
+      if (data.balance_infos && data.balance_infos.length > 0) bal = '¥ ' + data.balance_infos[0].total_balance;
+      else if (data.total_balance !== undefined) bal = '¥ ' + data.total_balance;
+      else if (data.balance !== undefined) bal = '¥ ' + data.balance;
+      balanceDisplay.textContent = '余额: ' + bal;
+    } else {
+      balanceDisplay.textContent = '余额: 不支持查询';
+    }
+  } catch {
+    balanceDisplay.textContent = '余额: 查询失败';
+  }
+}
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      ['rooms', 'characters', 'lorebooks', 'messages', 'config', 'player'].forEach(s => {
+        if (!d.objectStoreNames.contains(s)) {
+          if (s === 'messages') d.createObjectStore(s, { keyPath: 'id' });
+          else if (s === 'config' || s === 'player') d.createObjectStore(s, { keyPath: 'key' });
+          else d.createObjectStore(s, { keyPath: 'id' });
+        }
+      });
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(); };
+    req.onerror = () => reject(req.error);
+  });
+}
+function tx(store, mode='readonly') { return db.transaction(store, mode).objectStore(store); }
+function dbGet(store, key) { return new Promise(r => { const q = tx(store).get(key); q.onsuccess = () => r(q.result); }); }
+function dbPut(store, val) { return new Promise(r => { const q = tx(store, 'readwrite').put(val); q.onsuccess = () => r(); }); }
+function dbGetAll(store) { return new Promise(r => { const q = tx(store).getAll(); q.onsuccess = () => r(q.result || []); }); }
+function dbDelete(store, key) { return new Promise(r => { const q = tx(store, 'readwrite').delete(key); q.onsuccess = () => r(); }); }
+function dbClear(store) { return new Promise(r => { const q = tx(store, 'readwrite').clear(); q.onsuccess = () => r(); }); }
+
+async function init() {
+  try {
+    await openDB();
+    const c = await dbGet('config', 'main');
+    if (c) config = c;
+    config.apiBase = config.apiBase || 'https://api.deepseek.com/v1';
+    config.apiKey = config.apiKey || '';
+    config.model = config.model || 'deepseek-chat';
+    config.temp = config.temp || 0.8;
+    config.cAccent = config.cAccent || '#667F99';
+    config.cBg = config.cBg || '#F6F1E7';
+    config.cNpc = config.cNpc || '#FFFFFF';
+    config.cUser = config.cUser || '#667F99';
+    const p = await dbGet('player', 'main');
+    if (p) player = p;
+    else player = { key: 'main', name: '', gender: '', age: '', appearance: '', background: '' };
+    rooms = await dbGetAll('rooms');
+    characters = await dbGetAll('characters');
+    lorebooks = await dbGetAll('lorebooks');
+
+    // 旧世界书结构迁移：{content, keywords} -> {entries:[...]}
+    for (let i = 0; i < lorebooks.length; i++) {
+      const l = lorebooks[i];
+      if (!l.entries) {
+        l.entries = [];
+        if (l.content || l.keywords !== undefined) {
+          l.entries.push({ id: 'e_' + Date.now() + Math.random().toString(36).slice(2,6), keywords: l.keywords || '', content: l.content || '' });
+          delete l.content; delete l.keywords;
+          await dbPut('lorebooks', l);
+        }
+      }
+    }
+
+    applyColors();
+    renderRoomList();
+    renderCharList();
+    renderLoreList();
+    renderPlayer();
+    renderConfig();
+  } catch (err) {
+    console.error('数据库初始化异常:', err);
+  }
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => { switchPage(btn.dataset.page); });
+  });
+  document.getElementById('user-input').addEventListener('input', function() {
+    this.style.height = '40px';
+    this.style.height = (this.scrollHeight > 40 ? Math.min(this.scrollHeight, 120) : 40) + 'px';
+  });
+  document.getElementById('chat-stream').addEventListener('click', (e) => {
+    if (e.target.closest('.msg-row') || e.target.closest('.msg-wrapper')) return;
+    document.querySelectorAll('.show-actions').forEach(el => el.classList.remove('show-actions'));
+  });
+}
+
+function switchPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
+  if (btn) btn.classList.add('active');
+  if (window.innerWidth <= 768) toggleSidebar(false);
+}
+function toggleSidebar(show) {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  if (show) { sb.classList.add('open'); ov.classList.add('show'); }
+  else { sb.classList.remove('open'); ov.classList.remove('show'); }
+}
+
+async function renderRoomList() {
+  const list = document.getElementById('room-list');
+  list.innerHTML = '';
+  if (rooms.length === 0) { list.innerHTML = '<div class="empty-state">还没有频道，点击右上角新建吧</div>'; return; }
+  for (const r of rooms) {
+    const item = document.createElement('div');
+    item.className = 'room-item';
+    item.onclick = () => enterRoom(r.id);
+    item.innerHTML = `
+      <div class="room-avatar">${esc((r.name || '?').slice(0,1).toUpperCase())}</div>
+      <div class="room-info">
+        <div class="room-name">${esc(r.name)}</div>
+        <div class="room-desc">包含 ${(r.charIds || []).length} 个角色，绑定 ${(r.lorebookIds || []).length} 本世界书</div>
+      </div>
+      <button class="btn danger" style="padding:4px 8px; font-size:12px;" onclick="event.stopPropagation(); deleteRoom('${r.id}')">删除</button>
+    `;
+    list.appendChild(item);
+  }
+}
+async function createRoom() {
+  const name = await showModal('新建频道', '请输入频道名称（如：深夜酒吧）', true, '');
+  if (!name) return;
+  const id = 'room_' + Date.now();
+  const room = { id, name, charIds: [], lorebookIds: [], memory: "", createdAt: Date.now() };
+  await dbPut('rooms', room);
+  rooms.push(room);
+  renderRoomList();
+}
+async function deleteRoom(id) {
+  const ok = await showModal('删除频道', '确定删除这个频道及所有聊天记录吗？此操作不可恢复。', false, '', true);
+  if (!ok) return;
+  await dbDelete('rooms', id);
+  const allMsgs = await dbGetAll('messages');
+  for (const m of allMsgs) { if (m.roomId === id) await dbDelete('messages', m.id); }
+  rooms = rooms.filter(r => r.id !== id);
+  renderRoomList();
+}
+async function saveRoomName() {
+  const name = document.getElementById('chat-room-name').value.trim() || '未命名频道';
+  const room = rooms.find(r => r.id === currentRoomId);
+  if (room) { room.name = name; await dbPut('rooms', room); renderRoomList(); showToast('名称已保存'); }
+}
+
+async function enterRoom(id) {
+  currentRoomId = id;
+  const room = rooms.find(r => r.id === id);
+  document.getElementById('chat-room-name').value = room ? room.name : '未命名频道';
+  switchPage('chat');
+  await loadMessages();
+  renderChat();
+  renderCharCarousel();
+}
+async function loadMessages() {
+  const all = await dbGetAll('messages');
+  messages = all.filter(m => m.roomId === currentRoomId).sort((a,b) => a.id < b.id ? -1 : 1);
+}
+function renderCharCarousel() {
+  const bar = document.getElementById('char-carousel');
+  bar.innerHTML = '';
+  const room = rooms.find(r => r.id === currentRoomId);
+  if (!room) return;
+  const activeChars = characters.filter(c => (room.charIds || []).includes(c.id));
+  for (const ch of activeChars) {
+    const pill = document.createElement('div');
+    pill.className = 'char-pill';
+    pill.innerHTML = `
+      <div class="avatar">${ch.avatar ? `<img src="${ch.avatar}">` : esc((ch.name||'?').slice(0,1))}</div>
+      <div class="name">${esc(ch.name)}</div>
+    `;
+    pill.onclick = () => { const input = document.getElementById('user-input'); input.value += (input.value ? ' ' : '') + `@${ch.name} `; input.focus(); };
+    bar.appendChild(pill);
+  }
+}
+
+function openRoomSettings() {
+  const room = rooms.find(r => r.id === currentRoomId);
+  if (!room) return;
+  const cc = document.getElementById('room-char-checks');
+  cc.innerHTML = characters.length === 0 ? '请先去角色库创建角色' : characters.map(c => `
+    <label class="check-item">
+      <input type="checkbox" value="${c.id}" ${(room.charIds || []).includes(c.id) ? 'checked' : ''}>
+      <span>${esc(c.name)}</span>
+    </label>
+  `).join('');
+  const lc = document.getElementById('room-lore-checks');
+  lc.innerHTML = lorebooks.length === 0 ? '请先去世界书库创建设定' : lorebooks.map(l => `
+    <label class="check-item">
+      <input type="checkbox" value="${l.id}" ${(room.lorebookIds || []).includes(l.id) ? 'checked' : ''}>
+      <span>${esc(l.name)} <span style="color:var(--c-dim); font-size:11px;">(${(l.entries || []).length} 条)</span></span>
+    </label>
+  `).join('');
+  document.getElementById('room-memory').value = room.memory || '';
+  document.getElementById('room-modal').classList.add('show');
+}
+async function saveRoomSettings() {
+  const room = rooms.find(r => r.id === currentRoomId);
+  if (!room) return;
+  room.charIds = Array.from(document.querySelectorAll('#room-char-checks input:checked')).map(i => i.value);
+  room.lorebookIds = Array.from(document.querySelectorAll('#room-lore-checks input:checked')).map(i => i.value);
+  room.memory = document.getElementById('room-memory').value.trim();
+  await dbPut('rooms', room);
+  document.getElementById('room-modal').classList.remove('show');
+  renderRoomList();
+  renderCharCarousel();
+  showToast('频道配置已保存');
+}
+
+async function clearChat() {
+  if (window.isGenerating) return showToast('正在生成中');
+  const ok = await showModal('清空聊天', '将删除当前频道所有聊天记录，不可恢复。确定吗？', false, '', true);
+  if (!ok) return;
+  for (const m of messages) await dbDelete('messages', m.id);
+  messages = [];
+  renderChat();
+  showToast('已清空');
+}
+
+function exportChat() {
+  const room = rooms.find(r => r.id === currentRoomId);
+  if (!room) return;
+  const lines = [];
+  lines.push(`# ${room.name}`);
+  lines.push('');
+  for (const m of messages) {
+    if (m.type === 'user') lines.push(`**我**：${m.text}`);
+    else if (m.type === 'npc') {
+      const c = characters.find(x => x.id === m.speakerId);
+      lines.push(`**${c ? c.name : '?'}**：${m.text}`);
+    }
+    else if (m.type === 'narration') lines.push(`*${m.text}*`);
+    else if (m.type === 'system') lines.push(`> ${m.text}`);
+    lines.push('');
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (room.name || 'chat') + '-' + new Date().toISOString().slice(0,10) + '.md';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 500);
+  showToast('聊天已导出');
+}
+
+/* ================== 消息操作按钮（所有类型统一） ================== */
+function actionsHtml(id, text) {
+  const enc = encodeURIComponent(text);
+  return `
+    <div class="msg-actions">
+      <button class="msg-action-btn" onclick="copyMsg(decodeURIComponent('${enc}'))">复制</button>
+      <button class="msg-action-btn" onclick="speak(decodeURIComponent('${enc}'))">🔊</button>
+      <button class="msg-action-btn" onclick="rewriteMsg('${id}')">重写</button>
+      <button class="msg-action-btn" onclick="editMsg('${id}')">编辑</button>
+      <button class="msg-action-btn danger" onclick="deleteMsg('${id}')">删除</button>
+    </div>`;
+}
+
+function renderChat() {
+  const stream = document.getElementById('chat-stream');
+  stream.innerHTML = '';
+  for (const m of messages) {
+    if (m.type === 'npc') {
+      const ch = characters.find(c => c.id === m.speakerId);
+      const name = ch ? ch.name : (m.speakerId || '?');
+      const avatarHtml = ch && ch.avatar ? `<img src="${ch.avatar}">` : esc(name.slice(0,1));
+      const row = document.createElement('div');
+      row.className = 'msg-row npc';
+      row.id = 'msg-' + m.id;
+      row.innerHTML = `
+        <div class="msg-avatar">${avatarHtml}</div>
+        <div class="msg-content">
+          <div class="bubble">${esc(m.text)}</div>
+          ${actionsHtml(m.id, m.text)}
+        </div>`;
+      row.onclick = (e) => toggleMsgActions(e, row);
+      stream.appendChild(row);
+    } else if (m.type === 'user') {
+      const row = document.createElement('div');
+      row.className = 'msg-row user';
+      row.id = 'msg-' + m.id;
+      row.innerHTML = `
+        <div class="msg-avatar user">我</div>
+        <div class="msg-content">
+          <div class="bubble">${esc(m.text)}</div>
+          ${actionsHtml(m.id, m.text)}
+        </div>`;
+      row.onclick = (e) => toggleMsgActions(e, row);
+      stream.appendChild(row);
+    } else {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'msg-wrapper';
+      wrapper.id = 'msg-' + m.id;
+      wrapper.innerHTML = `
+        <div class="msg-center ${m.type}">${esc(m.text)}</div>
+        ${actionsHtml(m.id, m.text)}`;
+      wrapper.onclick = (e) => toggleMsgActions(e, wrapper);
+      stream.appendChild(wrapper);
+    }
+  }
+  if (window.isGenerating) {
+    const loadRow = document.createElement('div');
+    loadRow.className = 'msg-row npc';
+    loadRow.id = 'typing-indicator';
+    loadRow.innerHTML = `<div class="msg-avatar">...</div><div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+    stream.appendChild(loadRow);
+  }
+  stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
+}
+
+function toggleMsgActions(e, el) {
+  if (e.target.closest('.msg-action-btn')) return;
+  if (e.target.tagName === 'TEXTAREA') return;
+  e.stopPropagation();
+  const isShow = el.classList.contains('show-actions');
+  document.querySelectorAll('.show-actions').forEach(x => x.classList.remove('show-actions'));
+  if (!isShow) el.classList.add('show-actions');
+}
+
+function copyMsg(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('已复制')).catch(() => showToast('复制失败'));
+}
+function speak(text) {
+  if (!window.speechSynthesis) return showToast('浏览器不支持朗读');
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-CN';
+  u.rate = 1.0;
+  speechSynthesis.speak(u);
+}
+
+async function deleteMsg(id) {
+  if (window.isGenerating) return showToast('正在生成中');
+  const ok = await showModal('删除消息', '确定要删除这条消息吗？', false, '', true);
+  if (!ok) return;
+  await dbDelete('messages', id);
+  messages = messages.filter(m => m.id !== id);
+  renderChat();
+}
+
+function editMsg(id) {
+  if (window.isGenerating) return showToast('正在生成中');
+  const m = messages.find(x => x.id === id);
+  const row = document.getElementById('msg-' + id);
+  if (!m || !row) return;
+  const target = row.querySelector('.bubble') || row.querySelector('.msg-center');
+  if (!target) return;
+  const old = m.text;
+  const ta = document.createElement('textarea');
+  ta.value = old;
+  ta.style.cssText = 'width:100%;min-width:180px;min-height:60px;font-size:15px;line-height:1.6;border-radius:16px;border:1px solid var(--c-accent);';
+  target.replaceWith(ta);
+  ta.focus();
+  let done = false;
+  const commit = async () => {
+    if (done) return;
+    done = true;
+    const val = ta.value.trim();
+    if (val && val !== old) { m.text = val; await dbPut('messages', m); }
+    renderChat();
+  };
+  ta.onblur = commit;
+  ta.onkeydown = (e) => {
+    if (e.key === 'Escape') { done = true; renderChat(); }
+  };
+}
+
+async function rewriteMsg(id) {
+  if (window.isGenerating) return;
+  const idx = messages.findIndex(m => m.id === id);
+  if (idx < 0) return;
+  const ok = await showModal('重写', '这条及之后的消息会被删除，重新生成，确定吗？', false, '', true);
+  if (!ok) return;
+  for (const m of messages.slice(idx)) await dbDelete('messages', m.id);
+  messages = messages.slice(0, idx);
+  renderChat();
+  await generateReply();
+}
+
+/* ================== 角色库 ================== */
+function renderCharList() {
+  const list = document.getElementById('char-list');
+  list.innerHTML = '';
+  if (characters.length === 0) { list.innerHTML = '<div class="empty-state">暂无角色，点击右上角新建或导入</div>'; return; }
+  for (const ch of characters) {
+    const card = document.createElement('div'); card.className = 'char-item';
+    const avatarHtml = ch.avatar ? `<img src="${ch.avatar}">` : esc((ch.name||'?').slice(0,1));
+    card.innerHTML = `
+      <div class="char-avatar">${avatarHtml}</div>
+      <div class="char-info">
+        <div class="char-header">
+          <div class="char-name">${esc(ch.name)}</div>
+          <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button class="btn" style="padding:4px 8px; font-size:12px;" onclick="editChar('${ch.id}')">编辑</button>
+            <button class="btn" style="padding:4px 8px; font-size:12px;" onclick="exportChar('${ch.id}')">导出</button>
+            <button class="btn danger" style="padding:4px 8px; font-size:12px;" onclick="deleteChar('${ch.id}')">删除</button>
+          </div>
+        </div>
+        <div class="char-meta">${esc(ch.gender) || '未知'} · ${esc(ch.age) || '未知'}岁</div>
+        <div class="char-bg-preview">${esc(ch.background) || '暂无背景设定'}</div>
+      </div>
+    `;
+    list.appendChild(card);
+  }
+}
+
+let tempAvatarBase64 = '';
+function handleAvatarUpload(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 256;
+      let w = img.width, h = img.height;
+      if (w > h && w > max) { h = h * max / w; w = max; }
+      else if (h >= w && h > max) { w = w * max / h; h = max; }
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      tempAvatarBase64 = cv.toDataURL('image/jpeg', 0.8);
+      document.getElementById('m-char-avatar-preview').innerHTML = `<img src="${tempAvatarBase64}">`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  ev.target.value = '';
+}
+
+function openCharModal() {
+  document.getElementById('char-modal').classList.add('show');
+  document.getElementById('m-char-key').value = '';
+  ['name', 'gender', 'age', 'appearance', 'background'].forEach(k => document.getElementById('m-char-' + k).value = '');
+  tempAvatarBase64 = '';
+  document.getElementById('m-char-avatar-preview').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
+}
+function editChar(id) {
+  const ch = characters.find(c => c.id === id);
+  if (!ch) return;
+  document.getElementById('char-modal').classList.add('show');
+  document.getElementById('m-char-key').value = ch.id;
+  ['name', 'gender', 'age', 'appearance', 'background'].forEach(k => document.getElementById('m-char-' + k).value = ch[k] || '');
+  tempAvatarBase64 = ch.avatar || '';
+  if (tempAvatarBase64) {
+    document.getElementById('m-char-avatar-preview').innerHTML = `<img src="${tempAvatarBase64}">`;
+  } else {
+    document.getElementById('m-char-avatar-preview').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
+  }
+}
+async function saveCharacter() {
+  const id = document.getElementById('m-char-key').value || 'c_' + Date.now();
+  const ch = {
+    id,
+    name: document.getElementById('m-char-name').value || '未命名',
+    gender: document.getElementById('m-char-gender').value,
+    age: document.getElementById('m-char-age').value,
+    appearance: document.getElementById('m-char-appearance').value,
+    background: document.getElementById('m-char-background').value,
+    avatar: tempAvatarBase64
+  };
+  await dbPut('characters', ch);
+  characters = characters.filter(c => c.id !== id);
+  characters.push(ch);
+  document.getElementById('char-modal').classList.remove('show');
+  renderCharList();
+  renderCharCarousel();
+}
+async function deleteChar(id) {
+  const ok = await showModal('删除角色', '确定要删除该角色吗？', false, '', true);
+  if (!ok) return;
+  await dbDelete('characters', id);
+  characters = characters.filter(c => c.id !== id);
+  renderCharList();
+}
+
+function exportChar(id) {
+  const ch = characters.find(c => c.id === id);
+  if (!ch) return;
+  const out = {
+    spec: 'chara_card_v2',
+    spec_version: '2.0',
+    data: {
+      name: ch.name || '',
+      description: ch.background || '',
+      personality: '',
+      scenario: '',
+      first_mes: '',
+      mes_example: '',
+      creator_notes: '',
+      system_prompt: '',
+      post_history_instructions: '',
+      alternate_greetings: [],
+      tags: [],
+      creator: '',
+      character_version: '',
+      extensions: {}
+    }
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (ch.name || 'character') + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 500);
+  showToast('角色卡已导出');
+}
+
+async function importCharFile(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  ev.target.value = '';
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const ch = parseCharCard(data, file.name);
+    if (!ch) return showToast('无法识别的角色卡格式');
+    await dbPut('characters', ch);
+    characters.push(ch);
+    renderCharList();
+    renderCharCarousel();
+    showToast('已导入：' + ch.name);
+  } catch (e) {
+    showToast('导入失败：' + e.message);
+  }
+}
+
+function parseCharCard(data, filename) {
+  let name = filename.replace(/\.[^.]+$/, '');
+  let desc = '', personality = '', first_mes = '', avatar = '', gender = '', age = '', appearance = '';
+  if (data.spec && data.data) {
+    const d = data.data;
+    name = d.name || name;
+    desc = d.description || '';
+    personality = d.personality || '';
+    first_mes = d.first_mes || '';
+    avatar = d.avatar || '';
+  } else if (data.name) {
+    name = data.name;
+    desc = data.background || data.description || '';
+    personality = data.personality || '';
+    avatar = data.avatar || '';
+    gender = data.gender || '';
+    age = data.age || '';
+    appearance = data.appearance || '';
+  } else {
+    return null;
+  }
+  let bg = '';
+  if (personality) bg += `【性格】${personality}\n`;
+  if (desc) bg += desc;
+  if (first_mes) bg += `\n\n【开场白】${first_mes}`;
+  return {
+    id: 'c_' + Date.now() + Math.random().toString(36).slice(2,4),
+    name,
+    gender,
+    age,
+    appearance,
+    background: bg.trim(),
+    avatar
+  };
+}
+
+/* ================== 世界书库 ================== */
+function renderLoreList() {
+  const list = document.getElementById('lore-list');
+  list.innerHTML = '';
+  if (lorebooks.length === 0) { list.innerHTML = '<div class="empty-state">暂无世界书，点击右上角新建或导入</div>'; return; }
+  for (const l of lorebooks) {
+    const card = document.createElement('div');
+    card.className = 'app-card';
+    const entries = l.entries || [];
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center;">
+        <b>${esc(l.name)}</b>
+        <div style="display:flex; gap:4px;">
+          <button class="btn" style="padding:4px 8px; font-size:12px;" onclick="exportLore('${l.id}')">导出</button>
+          <button class="btn danger" style="padding:4px 8px; font-size:12px;" onclick="deleteLore('${l.id}')">删除</button>
+        </div>
+      </div>
+      <div class="lore-entries">
+        ${entries.map(e => `
+          <div class="lore-entry">
+            <div class="lore-entry-row">
+              <input type="text" placeholder="触发词（逗号分隔，留空=常驻）" value="${esc(e.keywords || '')}"
+                onchange="updateLoreEntry('${l.id}', '${e.id}', 'keywords', this.value)">
+              <button class="btn danger" style="padding:4px 8px; font-size:12px; flex:0 0 auto;" onclick="removeLoreEntry('${l.id}', '${e.id}')">×</button>
+            </div>
+            <textarea placeholder="条目内容..." onchange="updateLoreEntry('${l.id}', '${e.id}', 'content', this.value)" style="min-height:80px; font-size:13px;">${esc(e.content || '')}</textarea>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn" style="width:100%; margin-top:8px;" onclick="addLoreEntry('${l.id}')">+ 添加条目</button>
+    `;
+    list.appendChild(card);
+  }
+}
+
+async function addLore() {
+  const id = 'l_' + Date.now();
+  const l = { id, name: '新世界书', entries: [{ id: 'e_' + Date.now(), keywords: '', content: '' }] };
+  await dbPut('lorebooks', l);
+  lorebooks.push(l);
+  renderLoreList();
+}
+async function addLoreEntry(bookId) {
+  const l = lorebooks.find(x => x.id === bookId);
+  if (!l) return;
+  l.entries = l.entries || [];
+  l.entries.push({ id: 'e_' + Date.now() + Math.random().toString(36).slice(2,4), keywords: '', content: '' });
+  await dbPut('lorebooks', l);
+  renderLoreList();
+}
+async function updateLoreEntry(bookId, entryId, field, val) {
+  const l = lorebooks.find(x => x.id === bookId);
+  if (!l || !l.entries) return;
+  const e = l.entries.find(x => x.id === entryId);
+  if (e) { e[field] = val; await dbPut('lorebooks', l); }
+}
+async function removeLoreEntry(bookId, entryId) {
+  const l = lorebooks.find(x => x.id === bookId);
+  if (!l || !l.entries) return;
+  l.entries = l.entries.filter(x => x.id !== entryId);
+  await dbPut('lorebooks', l);
+  renderLoreList();
+}
+async function deleteLore(id) {
+  const ok = await showModal('删除世界书', '确定要删除这本世界书吗？', false, '', true);
+  if (!ok) return;
+  await dbDelete('lorebooks', id);
+  lorebooks = lorebooks.filter(x => x.id !== id);
+  renderLoreList();
+}
+
+function exportLore(id) {
+  const l = lorebooks.find(x => x.id === id);
+  if (!l) return;
+  const out = {
+    name: l.name,
+    entries: (l.entries || []).map(e => ({
+      keys: (e.keywords || '').split(/[,，]/).map(k => k.trim()).filter(Boolean),
+      content: e.content || ''
+    }))
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (l.name || 'lore') + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 500);
+  showToast('世界书已导出');
+}
+
+async function importLoreFile(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  ev.target.value = '';
+  try {
+    const text = await file.text();
+    const name = file.name.replace(/\.[^.]+$/, '');
+    let entries = [];
+    if (/\.json$/i.test(file.name)) {
+      entries = parseLoreJSON(JSON.parse(text));
+    } else {
+      entries = parseLoreTXT(text);
+    }
+    if (!entries.length) return showToast('未解析到有效条目');
+    const book = { id: 'l_' + Date.now(), name, entries };
+    await dbPut('lorebooks', book);
+    lorebooks.push(book);
+    renderLoreList();
+    showToast(`已导入 ${entries.length} 条`);
+  } catch (e) {
+    showToast('导入失败：' + e.message);
+  }
+}
+
+function parseLoreJSON(data) {
+  const out = [];
+  const push = (kw, content) => {
+    if (!content || !String(content).trim()) return;
+    out.push({
+      id: 'e_' + Date.now() + Math.random().toString(36).slice(2,6),
+      keywords: String(kw || '').trim(),
+      content: String(content).trim()
+    });
+  };
+  // SillyTavern 格式：entries 对象
+  if (data.entries && typeof data.entries === 'object' && !Array.isArray(data.entries)) {
+    for (const k in data.entries) {
+      const e = data.entries[k];
+      if (!e) continue;
+      const kw = Array.isArray(e.keys) ? e.keys.join(',') : (e.keys || e.keywords || '');
+      push(kw, e.content);
+    }
+    return out;
+  }
+  // entries 数组
+  if (Array.isArray(data.entries)) {
+    for (const e of data.entries) {
+      if (!e) continue;
+      const kw = Array.isArray(e.keys) ? e.keys.join(',') : (e.keys || e.keywords || '');
+      push(kw, e.content);
+    }
+    return out;
+  }
+  // 顶层数组
+  if (Array.isArray(data)) {
+    for (const e of data) {
+      if (!e) continue;
+      const kw = Array.isArray(e.keys) ? e.keys.join(',') : (e.keys || e.keywords || '');
+      push(kw, e.content);
+    }
+    return out;
+  }
+  // 单条
+  if (data.content) push(data.keywords || '', data.content);
+  return out;
+}
+
+function parseLoreTXT(text) {
+  const out = [];
+  const push = (kw, content) => {
+    if (!content || !content.trim()) return;
+    out.push({
+      id: 'e_' + Date.now() + Math.random().toString(36).slice(2,6),
+      keywords: (kw || '').trim(),
+      content: content.trim()
+    });
+  };
+  // 优先按 ## 标题切
+  if (/^##\s/m.test(text)) {
+    const parts = text.split(/\n(?=##\s)/);
+    for (const p of parts) {
+      const m = p.match(/^##\s*(.+?)\n([\s\S]*)$/);
+      if (m) push(m[1].trim(), m[2].trim());
+    }
+    if (out.length) return out;
+  }
+  // 按空行切
+  const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  for (const b of blocks) push('', b);
+  return out;
+}
+
+/* ================== 我的设定与设置 ================== */
+function renderPlayer() {
+  ['name', 'gender', 'age', 'appearance', 'background'].forEach(k => {
+    const el = document.getElementById('player-' + k);
+    if (el) el.value = player[k] || '';
+  });
+}
+async function savePlayer() {
+  player.name = document.getElementById('player-name').value;
+  player.gender = document.getElementById('player-gender').value;
+  player.age = document.getElementById('player-age').value;
+  player.appearance = document.getElementById('player-appearance').value;
+  player.background = document.getElementById('player-background').value;
+  await dbPut('player', player);
+  showToast('人设已保存');
+}
+
+function renderConfig() {
+  document.getElementById('cfg-base').value = config.apiBase || '';
+  document.getElementById('cfg-key').value = config.apiKey || '';
+  document.getElementById('cfg-model').value = config.model || '';
+  let p = 'custom';
+  if ((config.apiBase || '').includes('deepseek')) p = 'deepseek';
+  else if ((config.apiBase || '').includes('siliconflow')) p = 'siliconflow';
+  else if ((config.apiBase || '').includes('openai')) p = 'openai';
+  document.getElementById('cfg-provider').value = p;
+  document.getElementById('c-accent').value = config.cAccent;
+  document.getElementById('c-bg').value = config.cBg;
+  document.getElementById('c-bubble-npc').value = config.cNpc;
+  document.getElementById('c-bubble-user').value = config.cUser;
+}
+
+function applyColors() {
+  document.documentElement.style.setProperty('--c-accent', config.cAccent);
+  document.documentElement.style.setProperty('--c-bg', config.cBg);
+  document.documentElement.style.setProperty('--c-bubble-npc', config.cNpc);
+  document.documentElement.style.setProperty('--c-bubble-user', config.cUser);
+  const isDark = config.cBg && config.cBg.toLowerCase() < '#888888';
+  document.documentElement.style.setProperty('--c-panel', isDark ? '#222' : '#fff');
+  document.documentElement.style.setProperty('--c-text', isDark ? '#eee' : '#333');
+  document.documentElement.style.setProperty('--c-line', isDark ? '#444' : '#e5e5e5');
+}
+
+async function updateColors() {
+  config.cAccent = document.getElementById('c-accent').value;
+  config.cBg = document.getElementById('c-bg').value;
+  config.cNpc = document.getElementById('c-bubble-npc').value;
+  config.cUser = document.getElementById('c-bubble-user').value;
+  applyColors(); await dbPut('config', config);
+}
+async function saveConfig() {
+  config.apiBase = document.getElementById('cfg-base').value.trim();
+  config.apiKey = document.getElementById('cfg-key').value.trim();
+  config.model = document.getElementById('cfg-model').value;
+  await dbPut('config', config); showToast('配置已保存');
+}
+async function resetAll() {
+  const ok = await showModal('危险操作', '确定要清空所有数据吗？此操作无法撤销！', false, '', true);
+  if (!ok) return;
+  for (const s of ['rooms', 'characters', 'lorebooks', 'messages', 'config', 'player']) await dbClear(s);
+  location.reload();
+}
+
+/* ================== 备份 ================== */
+async function exportAll() {
+  const data = {};
+  for (const s of ['rooms','characters','lorebooks','messages','config','player']) {
+    data[s] = await dbGetAll(s);
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'unnamed-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 500);
+  showToast('备份已导出');
+}
+async function importAll(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  const ok = await showModal('导入备份', '将覆盖当前所有数据，确定吗？', false, '', true);
+  if (!ok) { ev.target.value = ''; return; }
+  try {
+    const data = JSON.parse(await file.text());
+    for (const s of ['rooms','characters','lorebooks','messages','config','player']) {
+      await dbClear(s);
+      for (const row of (data[s] || [])) await dbPut(s, row);
+    }
+    showToast('导入成功，正在刷新');
+    setTimeout(() => location.reload(), 800);
+  } catch (e) {
+    showToast('导入失败：' + e.message);
+  }
+  ev.target.value = '';
+}
+
+function toggleDirector() {
+  const area = document.getElementById('director-area');
+  area.classList.toggle('show');
+  document.getElementById('btn-director').classList.toggle('active', area.classList.contains('show'));
+}
+function toggleThink() {
+  enableThink = !enableThink;
+  document.getElementById('btn-think').classList.toggle('active', enableThink);
+}
+
+/* ================== 发送消息（流式） ================== */
+async function sendMessage() {
+  if (window.isGenerating || !currentRoomId) return;
+  const input = document.getElementById('user-input');
+  const txt = input.value.trim();
+  if (!txt) return;
+  input.value = ''; input.style.height = '40px';
+  const userMsg = { id: 'm_' + Date.now(), roomId: currentRoomId, type: 'user', text: txt };
+  await dbPut('messages', userMsg); messages.push(userMsg);
+  await generateReply();
+}
+
+async function generateReply() {
+  if (window.isGenerating || !currentRoomId) return;
+  const room = rooms.find(r => r.id === currentRoomId);
+  if (!room) return;
+
+  window.isGenerating = true;
+  renderChat();
+
+  const lastUser = [...messages].reverse().find(m => m.type === 'user');
+  const txt = lastUser ? lastUser.text : '';
+  const dirNote = document.getElementById('director-input').value.trim();
+
+  const activeChars = characters.filter(c => (room.charIds || []).includes(c.id));
+  const charText = activeChars.length
+    ? activeChars.map(c => `[${c.id}] ${c.name}｜性别:${c.gender || '?'}｜年龄:${c.age || '?'}｜外貌:${c.appearance || '?'}｜${c.background || ''}`).join('\n')
+    : '（当前频道暂无角色）';
+
+  const recentText = messages.slice(-15).map(m => m.text).join(' ') + ' ' + txt;
+  // 世界书按条目匹配
+  const activeEntries = [];
+  for (const l of lorebooks) {
+    if (!(room.lorebookIds || []).includes(l.id)) continue;
+    for (const e of (l.entries || [])) {
+      if (!e.content || !e.content.trim()) continue;
+      const kw = (e.keywords || '').trim();
+      if (!kw) { activeEntries.push({ name: l.name, content: e.content }); continue; }
+      const kws = kw.split(/[,，]/).map(k => k.trim()).filter(Boolean);
+      if (kws.some(k => recentText.includes(k))) activeEntries.push({ name: l.name, content: e.content });
+    }
+  }
+  const loreText = activeEntries.map(e => `【${e.name}】\n${e.content}`).join('\n\n') || '无';
+  const memoryText = room.memory ? `【已发生剧情/记忆】\n${room.memory}` : '';
+  const playerText = `名字：${player.name || '?'}\n性别：${player.gender || '?'}\n年龄：${player.age || '?'}\n外貌：${player.appearance || '?'}\n背景：${player.background || '?'}`;
+
+  const historyArr = messages.slice(-16, -1);
+  const history = historyArr.map(m => {
+    if (m.type === 'user') return `我：${m.text}`;
+    if (m.type === 'npc') { const c = characters.find(x => x.id === m.speakerId); return `${c ? c.name : '?'}：${m.text}`; }
+    if (m.type === 'narration') return `[旁白]：${m.text}`;
+    return '';
+  }).filter(Boolean).join('\n');
+
+  const prompt = `你是一个RP（角色扮演）引擎。根据上下文生成剧情，严格按下面格式输出，不要输出格式以外的任何内容：
+
+[旁白]环境、动作、心理、场景转换等描写[/旁白]
+[角色:角色ID]该角色说的话[/角色]
+[旁白]可以多次出现，旁白与对话交替[/旁白]
+[角色:角色ID]多个角色可以交替出场[/角色]
+[记忆]如果发生重大剧情转折、关系转变或获得重要线索，用一句话总结，否则整段省略[/记忆]
+
+要求：
+1. 旁白和角色对话分离，旁白用第三人称，对话写成角色口吻。
+2. [角色:角色ID] 中的 ID 必须严格使用下方「当前在场角色」列表中的方括号内 ID。
+3. [记忆] 段只有真正发生重要事件时才输出，日常闲聊不要输出。
+4. 不要输出任何解释、代码块标记或额外文字。
+
+${memoryText}
+
+【世界设定】
+${loreText}
+
+【用户（我）】
+${playerText}
+
+【当前在场角色】
+${charText}
+
+【历史对话】
+${history || '（无）'}
+
+【用户输入】
+${txt}
+${dirNote ? `\n【导演指令】${dirNote}` : ''}`;
+
+  const stream = document.getElementById('chat-stream');
+  document.getElementById('typing-indicator')?.remove();
+  const liveWrap = document.createElement('div');
+  liveWrap.id = 'live-stream';
+  stream.appendChild(liveWrap);
+
+  let blocks = [];
+  let cur = null;
+  let buffer = '';
+
+  const renderLive = (done) => {
+    let html = '';
+    for (const b of blocks) {
+      if (b.type === 'narr') {
+        if (!b.text) continue;
+        html += `<div class="msg-wrapper"><div class="msg-center narration">${esc(b.text)}</div></div>`;
+      } else if (b.type === 'dialog') {
+        const ch = characters.find(c => c.id === b.id);
+        const name = ch ? ch.name : (b.id || '?');
+        const av = ch && ch.avatar ? `<img src="${ch.avatar}">` : esc(name.slice(0,1));
+        const curCursor = (!done && cur === b) ? '<span class="cursor">▍</span>' : '';
+        if (!b.text && !curCursor) continue;
+        html += `<div class="msg-row npc"><div class="msg-avatar">${av}</div>
+          <div class="msg-content"><div class="bubble">${esc(b.text)}${curCursor}</div></div></div>`;
+      }
+    }
+    liveWrap.innerHTML = html;
+    stream.scrollTop = stream.scrollHeight;
+  };
+
+  const flushChunk = (chunk) => {
+    buffer += chunk;
+    let loop = true;
+    while (loop) {
+      loop = false;
+      if (!cur) {
+        const mN = buffer.match(/\[旁白\]/);
+        const mD = buffer.match(/\[角色:([^\]]+)\]/);
+        const mM = buffer.match(/\[记忆\]/);
+        const cands = [];
+        if (mN) cands.push({ idx: mN.index, len: mN[0].length, type: 'narr' });
+        if (mD) cands.push({ idx: mD.index, len: mD[0].length, type: 'dialog', id: mD[1].trim() });
+        if (mM) cands.push({ idx: mM.index, len: mM[0].length, type: 'mem' });
+        if (!cands.length) break;
+        cands.sort((a,b) => a.idx - b.idx);
+        const c = cands[0];
+        buffer = buffer.slice(c.idx + c.len);
+        const blk = { type: c.type, text: '' };
+        if (c.type === 'dialog') blk.id = c.id;
+        blocks.push(blk);
+        cur = blk;
+        loop = true;
+      } else {
+        const endTag = cur.type === 'narr' ? '[/旁白]' : cur.type === 'dialog' ? '[/角色]' : '[/记忆]';
+        const ei = buffer.indexOf(endTag);
+        if (ei < 0) {
+          const keep = 20;
+          if (buffer.length > keep) {
+            cur.text += buffer.slice(0, -keep);
+            buffer = buffer.slice(-keep);
+          }
+          break;
+        } else {
+          cur.text += buffer.slice(0, ei);
+          buffer = buffer.slice(ei + endTag.length);
+          cur = null;
+          loop = true;
+        }
+      }
+    }
+    renderLive(false);
+  };
+
+  try {
+    const res = await fetch(`${config.apiBase}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.apiKey },
+      body: JSON.stringify({
+        model: config.model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: config.temp,
+        stream: true
+      })
+    });
+    if (!res.ok) {
+      let errTxt = '';
+      try { errTxt = (await res.text()).slice(0, 300); } catch {}
+      throw new Error('HTTP ' + res.status + ' ' + errTxt);
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let sseBuf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      sseBuf += decoder.decode(value, { stream: true });
+      const lines = sseBuf.split('\n');
+      sseBuf = lines.pop();
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t.startsWith('data:')) continue;
+        const payload = t.slice(5).trim();
+        if (payload === '[DONE]') continue;
+        try {
+          const j = JSON.parse(payload);
+          const delta = j.choices?.[0]?.delta?.content;
+          if (delta) flushChunk(delta);
+        } catch {}
+      }
+    }
+    if (cur && buffer) { cur.text += buffer; buffer = ''; }
+    renderLive(true);
+
+    const ts = Date.now();
+    let memText = '';
+    for (let i = 0; i < blocks.length; i++) {
+      const b = blocks[i];
+      if (b.type === 'narr' && b.text.trim()) {
+        const m = { id: 'm_' + ts + 'n' + i, roomId: currentRoomId, type: 'narration', text: b.text.trim() };
+        await dbPut('messages', m); messages.push(m);
+      } else if (b.type === 'dialog' && b.text.trim()) {
+        const m = { id: 'm_' + ts + 'd' + i, roomId: currentRoomId, type: 'npc', speakerId: b.id, text: b.text.trim() };
+        await dbPut('messages', m); messages.push(m);
+      } else if (b.type === 'mem' && b.text.trim()) {
+        memText += (memText ? '\n' : '') + '- ' + b.text.trim();
+      }
+    }
+    if (memText) {
+      room.memory = (room.memory ? room.memory + '\n' : '') + memText;
+      await dbPut('rooms', room);
+      const sysMsg = { id: 'm_' + ts + 'sys', roomId: currentRoomId, type: 'system', text: '【自动记忆已更新】' + memText };
+      await dbPut('messages', sysMsg); messages.push(sysMsg);
+    }
+  } catch (err) {
+    const m = { id: 'm_' + Date.now() + 'e', roomId: currentRoomId, type: 'system', text: '报错: ' + err.message };
+    await dbPut('messages', m); messages.push(m);
+  }
+
+  window.isGenerating = false;
+  document.getElementById('live-stream')?.remove();
+  renderChat();
+}
+
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+init();
+
+let introClosed = false;
+function hideIntro() {
+  if (introClosed) return;
+  introClosed = true;
+  const intro = document.getElementById('intro-overlay');
+  if (intro) {
+    intro.classList.add('hide');
+    setTimeout(() => intro.remove(), 500);
+  }
+}
+window.addEventListener('load', () => setTimeout(hideIntro, 2000));
+</script>
+</body>
+</html>

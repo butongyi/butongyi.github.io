@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>我的工具箱</title>
+<meta name="description" content="不同意做的几个小工具，打开就能用。">
+<style>
+:root{
+  --paper:#F3F0E8;
+  --card:#FCFAF5;
+  --ink:#282B28;
+  --muted:#7D817A;
+  --line:#DCD8CC;
+  --indigo:#667F99;
+  --indigo-deep:#526B83;
+  --indigo-soft:#E8EDF0;
+  --seal:#9E5245;
+  --radius:10px;
+  --serif:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC","SimSun",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;font-family:var(--sans);color:var(--ink);
+  background-color:var(--paper);
+  background-image:radial-gradient(rgba(102,127,153,.055) 1px,transparent 1px);
+  background-size:22px 22px;line-height:1.6;
+}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px 64px}
+
+header{padding:60px 4px 30px;text-align:center}
+.brand{
+  display:inline-flex;align-items:center;gap:10px;font-family:var(--serif);
+  font-size:13px;letter-spacing:.28em;text-indent:.28em;color:var(--indigo);margin-bottom:20px;
+}
+.brand::before,.brand::after{content:"";width:26px;height:1px;background:var(--indigo);opacity:.5}
+h1{font-family:var(--serif);font-weight:600;font-size:40px;letter-spacing:.12em;text-indent:.12em;margin:0 0 12px}
+.role{font-size:13px;color:var(--indigo-deep);letter-spacing:.16em;margin:0 0 16px}
+.subtitle{font-size:14px;color:var(--muted);letter-spacing:.04em;margin:0;max-width:540px;margin-left:auto;margin-right:auto}
+.seal{
+  display:inline-block;margin-top:24px;padding:7px 12px;border:1px solid var(--seal);
+  color:var(--seal);border-radius:4px;font-family:var(--serif);font-size:12px;
+  letter-spacing:.2em;text-indent:.2em;transform:rotate(-3deg);opacity:.85;
+}
+
+.section-label{
+  font-family:var(--serif);font-size:15px;color:var(--indigo-deep);
+  letter-spacing:.14em;margin:36px 4px 18px;display:flex;align-items:center;gap:12px;
+}
+.section-label::after{content:"";flex:1;height:1px;background:var(--line)}
+.section-note{font-size:12px;color:var(--muted);margin:36px 4px 18px}
+
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.card{
+  position:relative;display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--radius);padding:24px 24px 20px;overflow:hidden;
+  box-shadow:0 2px 12px rgba(52,48,40,.035);
+  transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+}
+.card:hover,.card:focus-visible{
+  transform:translateY(-3px);border-color:var(--indigo);
+  box-shadow:0 10px 28px rgba(52,48,40,.10);outline:none;
+}
+.card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--indigo);
+  transform:scaleY(0);transform-origin:top;transition:transform .25s ease;
+}
+.card:hover::before,.card:focus-visible::before{transform:scaleY(1)}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.icon{
+  width:46px;height:46px;flex:none;border-radius:8px;background:var(--indigo-soft);
+  color:var(--indigo-deep);display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:21px;
+}
+.tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.tag{font-size:11px;line-height:1;padding:5px 8px;border-radius:20px;border:1px solid var(--line);color:var(--muted);background:var(--paper);white-space:nowrap}
+.tag.ai{color:var(--seal);border-color:rgba(158,82,69,.35)}
+.tag.tech{color:var(--indigo-deep);border-color:rgba(102,127,153,.4);background:var(--indigo-soft)}
+.card h2{font-family:var(--serif);font-weight:600;font-size:20px;letter-spacing:.04em;margin:0 0 8px}
+.card .feature{font-size:11px;color:var(--indigo);letter-spacing:.08em;margin:0 0 8px}
+.card p{margin:0;color:var(--muted);font-size:13px;line-height:1.7;min-height:44px}
+.card-foot{
+  margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);
+  display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--indigo-deep);
+}
+.enter{display:inline-flex;align-items:center;gap:5px;letter-spacing:.06em}
+.enter .arrow{transition:transform .2s ease}
+.card:hover .enter .arrow{transform:translateX(4px)}
+.count{font-family:var(--serif);color:var(--muted);letter-spacing:.08em}
+
+.about{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px 28px;margin-top:8px;
+}
+.about h3{font-family:var(--serif);font-weight:600;font-size:17px;letter-spacing:.1em;margin:0 0 14px;color:var(--indigo-deep)}
+.about p{margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.9}
+.about .skills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.about .skills span{font-size:12px;padding:6px 12px;border-radius:6px;background:var(--indigo-soft);color:var(--indigo-deep)}
+.contact{margin-top:20px;padding-top:18px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted)}
+.contact a{color:var(--indigo-deep);text-decoration:none;border-bottom:1px solid var(--indigo);padding-bottom:1px}
+.contact a:hover{color:var(--seal);border-color:var(--seal)}
+
+footer{margin-top:40px;text-align:center;color:var(--muted);font-size:12px;line-height:2;padding-top:24px;border-top:1px solid var(--line)}
+@media(max-width:640px){
+  header{padding:42px 4px 24px}
+  h1{font-size:31px}
+  .grid{grid-template-columns:1fr;gap:14px}
+  .card{padding:20px}
+  .card p{min-height:0}
+  .about{padding:22px 20px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">纸 上 浮 生</div>
+    <h1>我的工具箱</h1>
+    <div class="seal">兴 之 所 至</div>
+  </header>
+
+  <p class="section-note">点开卡片即可使用，手机端同样支持</p>
+  <main class="grid">
+
+    <a class="card" href="games/fusheng-card.html">
+      <div class="card-top">
+        <div class="icon">卡</div>
+        <div class="tags"><span class="tag">能导出图片</span></div>
+      </div>
+      <h2>浮生小卡</h2>
+      <div class="feature">制作属于自己的角色卡</div>
+      <p>上传图片、添加文字、更换配色，拼出一张属于自己的卡片，完成后可以导出为图片保存。</p>
+      <div class="card-foot"><span class="count">其 一</span><span class="enter">打开看看 <span class="arrow">→</span></span></div>
+    </a>
+
+    <a class="card" href="games/weimingmingkongjian.html">
+      <div class="card-top">
+        <div class="icon">未</div>
+        <div class="tags"><span class="tag ai">要自己的密钥</span></div>
+      </div>
+      <h2>未命名空间</h2>
+      <div class="feature">自由发挥的文字冒险</div>
+      <p>自己设定世界观与角色，输入行动或对白，故事便由 AI 接着往下写。</p>
+      <div class="card-foot"><span class="count">其 二</span><span class="enter">打开看看 <span class="arrow">→</span></span></div>
+    </a>
+
+    <a class="card" href="games/zhishang-zaowuzhu.html">
+      <div class="card-top">
+        <div class="icon">造</div>
+        <div class="tags"><span class="tag ai">要自己的密钥</span></div>
+      </div>
+      <h2>纸上造物主</h2>
+      <div class="feature">像玩游戏一样写故事</div>
+      <p>设定好人设与大纲，你只管写下去，其余部分交给 AI 补全。进度会自动保存，下次可以接着写。</p>
+      <div class="card-foot"><span class="count">其 三</span><span class="enter">打开看看 <span class="arrow">→</span></span></div>
+    </a>
+
+  </main>
+
+  <div class="section-label">关于</div>
+  <section class="about">
+    <h3>关于作者</h3>
+    <p>你好，我是不同意🍎🍏，一个兴趣使然的小作者。<br>这是我写的几个小工具，如果觉得不错可以来评论区评论。如果遇到不顺手的地方，可以通过以下方式联系我，但我不一定会回复哦。</p>
+    <div class="contact">
+      抖音：<a href="https://www.douyin.com/user/MS4wLjABAAAAlM9tMULO53X5Q0Kn--dKTlHsjAAZe6PFTMq9GSatP4W1DB4UQ8Ld2p4_8pwSyWXq" target="_blank" rel="noopener">不同意</a>（抖音号 37163077659）　·　<a href="https://github.com/butongyi" target="_blank" rel="noopener">GitHub @butongyi</a>
+    </div>
+  </section>
+
+  <footer>
+    <div>© 2026 不同意</div>
+    <div>兴趣使然，随手所作 · 存档保存在本机浏览器</div>
+  </footer>
+</div>
+<script>
+// 发布平台用 sharecode 做访问控制，站内跳转必须把它带上，否则点进去会 403。
+// 从当前地址取出 sharecode，自动附加到所有站内链接；本地/GitHub Pages 没有这个参数时不影响。
+(function () {
+  var code = new URLSearchParams(location.search).get('sharecode');
+  if (!code) return;
+  document.querySelectorAll('a[href]').forEach(function (a) {
+    var href = a.getAttribute('href');
+    if (!href || /^(https?:|mailto:|#)/i.test(href)) return;
+    a.setAttribute('href', href + (href.indexOf('?') >= 0 ? '&' : '?') + 'sharecode=' + encodeURIComponent(code));
+  });
+})();
+</script>
+</body>
+</html>
