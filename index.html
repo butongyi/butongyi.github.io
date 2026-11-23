@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>我的工具箱</title>
-<meta name="description" content="不同意做的几个小工具，打开就能用。">
+<meta name="description" content="不同意写的小东西，打开就能用。">
 <style>
 :root{
   --paper:#F3F0E8;
@@ -53,6 +53,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:40px;letter-spacing:.12em;
 .section-note{font-size:12px;color:var(--muted);margin:36px 4px 18px}
 
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.grid:has(.card:only-child){grid-template-columns:minmax(0,440px);justify-content:center}
 .card{
   position:relative;display:block;text-decoration:none;color:inherit;background:var(--card);
   border:1px solid var(--line);border-radius:var(--radius);padding:24px 24px 20px;overflow:hidden;
@@ -135,34 +136,12 @@ footer{margin-top:40px;text-align:center;color:var(--muted);font-size:12px;line-
       <div class="card-foot"><span class="count">其 一</span><span class="enter">打开看看 <span class="arrow">→</span></span></div>
     </a>
 
-    <a class="card" href="games/weimingmingkongjian.html">
-      <div class="card-top">
-        <div class="icon">未</div>
-        <div class="tags"><span class="tag ai">要自己的密钥</span></div>
-      </div>
-      <h2>未命名空间</h2>
-      <div class="feature">自由发挥的文字冒险</div>
-      <p>自己设定世界观与角色，输入行动或对白，故事便由 AI 接着往下写。</p>
-      <div class="card-foot"><span class="count">其 二</span><span class="enter">打开看看 <span class="arrow">→</span></span></div>
-    </a>
-
-    <a class="card" href="games/zhishang-zaowuzhu.html">
-      <div class="card-top">
-        <div class="icon">造</div>
-        <div class="tags"><span class="tag ai">要自己的密钥</span></div>
-      </div>
-      <h2>纸上造物主</h2>
-      <div class="feature">像玩游戏一样写故事</div>
-      <p>设定好人设与大纲，你只管写下去，其余部分交给 AI 补全。进度会自动保存，下次可以接着写。</p>
-      <div class="card-foot"><span class="count">其 三</span><span class="enter">打开看看 <span class="arrow">→</span></span></div>
-    </a>
-
   </main>
 
   <div class="section-label">关于</div>
   <section class="about">
     <h3>关于作者</h3>
-    <p>你好，我是不同意🍎🍏，一个兴趣使然的小作者。<br>这是我写的几个小工具，如果觉得不错可以来评论区评论。如果遇到不顺手的地方，可以通过以下方式联系我，但我不一定会回复哦。</p>
+    <p>你好，我是不同意🍎🍏，一个兴趣使然的小作者。<br>这是我写的小东西，如果觉得不错可以来评论区评论。如果遇到不顺手的地方，可以通过以下方式联系我，但我不一定会回复哦。</p>
     <div class="contact">
       抖音：<a href="https://www.douyin.com/user/MS4wLjABAAAAlM9tMULO53X5Q0Kn--dKTlHsjAAZe6PFTMq9GSatP4W1DB4UQ8Ld2p4_8pwSyWXq" target="_blank" rel="noopener">不同意</a>（抖音号 37163077659）　·　<a href="https://github.com/butongyi" target="_blank" rel="noopener">GitHub @butongyi</a>
     </div>
