@@ -1,0 +1,202 @@
+/*
+  全站控件层 v1（按钮）
+  用法：
+    <button class="ui-btn ui-btn--primary ui-btn--md">主操作</button>
+    <a class="ui-btn ui-btn--secondary ui-btn--sm" href="...">次操作</a>
+    <button class="ui-btn ui-btn--ghost ui-btn--sm">文字按钮</button>
+  级别：primary / secondary / ghost；尺寸：md（默认）/ sm；胶囊加 ui-btn--pill。
+  主题：跟随根元素 data-theme="dark|light"，颜色令牌在下方两套中维护。
+  引用：根目录页面 href="assets/ui.css"；games/ 等子目录页面 href="../assets/ui.css"；
+        更深的目录按层级补 ../（如 2026-11-24/xxx/outputs/ 用 ../../../assets/ui.css）。
+  本文件只放控件外观；页面布局、页面级配色仍留在各自页面里。
+  扩展：新增控件沿用 --ui-* 令牌，并使用 .ui-xxx 前缀，避免与页面既有类冲突。
+*/
+
+:root{
+  --ui-h-md:36px;
+  --ui-h-sm:30px;
+  --ui-px-md:14px;
+  --ui-px-sm:10px;
+  --ui-fs-md:13px;
+  --ui-fs-sm:12px;
+  --ui-radius:6px;
+  --ui-dur:140ms;
+  --ui-ease:ease;
+
+  --ui-line:#D9DBD6;
+  --ui-surface:#FFFFFF;
+  --ui-surface-hover:#FFF4F8;
+  --ui-text:#101210;
+  --ui-muted:#5F6562;
+  --ui-accent:#FF2E88;
+  --ui-accent-hover:#FF4D9B;
+  --ui-accent-strong:#B00F55;
+  --ui-accent-soft:rgba(255,46,136,.07);
+  --ui-primary-fg:#101210;
+  --ui-ring:#B00F55;
+  --ui-shadow:0 1px 2px rgba(16,18,16,.06);
+  --ui-shadow-hover:0 2px 6px rgba(16,18,16,.09);
+  --ui-shadow-active:0 1px 1px rgba(16,18,16,.05);
+  --ui-inset:inset 0 1px 3px rgba(16,18,16,.14);
+  --ui-disabled-opacity:.45;
+}
+
+html[data-theme="dark"]{
+  --ui-line:#2B2F30;
+  --ui-surface:#141617;
+  --ui-surface-hover:#1B1E1F;
+  --ui-text:#F2F0EA;
+  --ui-muted:#9AA0A0;
+  --ui-accent:#FF2E88;
+  --ui-accent-hover:#FF5AA3;
+  --ui-accent-strong:#FF2E88;
+  --ui-accent-soft:rgba(255,46,136,.12);
+  --ui-primary-fg:#0B0C0D;
+  --ui-ring:#00E0C6;
+  --ui-shadow:0 1px 2px rgba(0,0,0,.40);
+  --ui-shadow-hover:0 2px 8px rgba(0,0,0,.50);
+  --ui-shadow-active:0 1px 1px rgba(0,0,0,.35);
+  --ui-inset:inset 0 1px 3px rgba(0,0,0,.55);
+  --ui-disabled-opacity:.40;
+}
+
+/* 未显式设置 data-theme 时，跟随系统偏好，与门户现有机制一致 */
+@media (prefers-color-scheme:dark){
+  html:not([data-theme="light"]){
+    --ui-line:#2B2F30;
+    --ui-surface:#141617;
+    --ui-surface-hover:#1B1E1F;
+    --ui-text:#F2F0EA;
+    --ui-muted:#9AA0A0;
+    --ui-accent:#FF2E88;
+    --ui-accent-hover:#FF5AA3;
+    --ui-accent-strong:#FF2E88;
+    --ui-accent-soft:rgba(255,46,136,.12);
+    --ui-primary-fg:#0B0C0D;
+    --ui-ring:#00E0C6;
+    --ui-shadow:0 1px 2px rgba(0,0,0,.40);
+    --ui-shadow-hover:0 2px 8px rgba(0,0,0,.50);
+    --ui-shadow-active:0 1px 1px rgba(0,0,0,.35);
+    --ui-inset:inset 0 1px 3px rgba(0,0,0,.55);
+    --ui-disabled-opacity:.40;
+  }
+}
+
+.ui-btn{
+  --_h:var(--ui-h-md);
+  --_px:var(--ui-px-md);
+  --_fs:var(--ui-fs-md);
+  --_bg:var(--ui-surface);
+  --_bg-hover:var(--ui-surface-hover);
+  --_border:var(--ui-line);
+  --_border-hover:var(--ui-accent);
+  --_fg:var(--ui-text);
+  --_fg-hover:var(--ui-text);
+  box-sizing:border-box;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  height:var(--_h);
+  padding:0 var(--_px);
+  font-family:inherit;
+  font-size:var(--_fs);
+  font-weight:500;
+  line-height:1;
+  letter-spacing:.04em;
+  text-decoration:none;
+  white-space:nowrap;
+  color:var(--_fg);
+  background:var(--_bg);
+  border:1px solid var(--_border);
+  border-radius:var(--ui-radius);
+  box-shadow:var(--ui-shadow);
+  cursor:pointer;
+  user-select:none;
+  appearance:none;
+  -webkit-appearance:none;
+  transition:
+    color var(--ui-dur) var(--ui-ease),
+    background-color var(--ui-dur) var(--ui-ease),
+    border-color var(--ui-dur) var(--ui-ease),
+    box-shadow var(--ui-dur) var(--ui-ease),
+    transform var(--ui-dur) var(--ui-ease);
+}
+
+.ui-btn:hover:not(:disabled):not([aria-disabled="true"]){
+  color:var(--_fg-hover);
+  background:var(--_bg-hover);
+  border-color:var(--_border-hover);
+  box-shadow:var(--ui-shadow-hover);
+}
+
+.ui-btn:active:not(:disabled):not([aria-disabled="true"]){
+  transform:translateY(1px);
+  box-shadow:var(--ui-shadow-active),var(--ui-inset);
+}
+
+.ui-btn:focus-visible{
+  outline:2px solid var(--ui-ring);
+  outline-offset:2px;
+}
+
+.ui-btn:disabled,
+.ui-btn[aria-disabled="true"]{
+  opacity:var(--ui-disabled-opacity);
+  box-shadow:none;
+  cursor:not-allowed;
+  filter:saturate(.35);
+  transform:none;
+}
+
+.ui-btn--primary{
+  --_bg:var(--ui-accent);
+  --_bg-hover:var(--ui-accent-hover);
+  --_border:var(--ui-accent);
+  --_border-hover:var(--ui-accent-hover);
+  --_fg:var(--ui-primary-fg);
+  --_fg-hover:var(--ui-primary-fg);
+}
+
+.ui-btn--secondary{
+  --_bg:var(--ui-surface);
+  --_bg-hover:var(--ui-accent-soft);
+  --_border:var(--ui-line);
+  --_border-hover:var(--ui-accent);
+  --_fg:var(--ui-muted);
+  --_fg-hover:var(--ui-accent-strong);
+}
+
+.ui-btn--ghost{
+  --_bg:transparent;
+  --_bg-hover:var(--ui-accent-soft);
+  --_border:transparent;
+  --_border-hover:transparent;
+  --_fg:var(--ui-accent-strong);
+  --_fg-hover:var(--ui-accent-strong);
+  box-shadow:none;
+}
+
+.ui-btn--ghost:hover:not(:disabled):not([aria-disabled="true"]){
+  box-shadow:none;
+}
+
+.ui-btn--md{
+  --_h:var(--ui-h-md);
+  --_px:var(--ui-px-md);
+  --_fs:var(--ui-fs-md);
+}
+
+.ui-btn--sm{
+  --_h:var(--ui-h-sm);
+  --_px:var(--ui-px-sm);
+  --_fs:var(--ui-fs-sm);
+}
+
+.ui-btn--pill{
+  border-radius:999px;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .ui-btn{transition:none}
+}
