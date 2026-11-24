@@ -723,6 +723,18 @@
   .note{border-radius:4px;}
   .note .note-text{font-family:var(--serif);}
   .modal{border-radius:6px; border:1px solid var(--line);}
+  /* 使用说明：印章序号列表，正文保持无衬线小字可读 */
+  #helpMask .modal{width:430px; max-height:calc(100vh - 32px); display:flex; flex-direction:column;}
+  #helpMask .help-body{overflow-y:auto; min-height:0; padding-right:var(--s1);}
+  .help-list{list-style:none; counter-reset:help; margin:0; padding:0;}
+  .help-list li{counter-increment:help; position:relative; padding-left:26px; margin-bottom:12px;
+    font-size:var(--fs-sm); line-height:1.75; color:var(--text);}
+  .help-list li:last-child{margin-bottom:0;}
+  .help-list li::before{content:counter(help); position:absolute; left:0; top:3px;
+    width:16px; height:16px; display:grid; place-items:center;
+    font-family:var(--serif); font-size:10px; line-height:1; color:var(--accent);
+    border:1px solid var(--accent); border-radius:2px;}
+  .help-list li strong{font-family:var(--serif); font-weight:600; letter-spacing:.04em;}
   .settings{border-radius:8px;}
   .field label{font-family:var(--serif); font-size:var(--fs-sm); letter-spacing:.06em;}
   .field input,.field textarea,.field select{border-radius:3px;}
@@ -780,6 +792,7 @@
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
   <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
 </svg>
 
 <header id="toolbar">
@@ -810,6 +823,7 @@
       <button class="mi" id="exportImgBtn"><svg class="ic ic-sm"><use href="#i-image"/></svg> 导出图片 PNG</button>
       <button class="mi" id="importBtn"><svg class="ic ic-sm"><use href="#i-upload"/></svg> 导入 JSON</button>
       <button class="mi" id="apiBtn"><svg class="ic ic-sm"><use href="#i-gear"/></svg> 设置</button>
+      <button class="mi" id="menuHelp"><svg class="ic ic-sm"><use href="#i-help"/></svg> 使用说明</button>
     </div>
   </div>
   <input type="file" id="importFile" accept="application/json" hidden>
@@ -1004,6 +1018,27 @@
       </div>
     </div>
     <div class="sf"><div class="spacer"></div><button class="tbtn ui-btn ui-btn--primary ui-btn--md" id="apiSave">保存</button></div>
+  </div>
+</div>
+
+<!-- 使用说明 -->
+<div class="mask" id="helpMask">
+  <div class="modal">
+    <h3>使用说明</h3>
+    <div class="help-body">
+      <ol class="help-list">
+        <li><strong>建立词条：</strong>点顶栏「新建」或双击画布空白处，填写名称、释义和可选属性，并选择角色、道具或状态。双击已有词条可修改，按住拖动可换位置。</li>
+        <li><strong>连接关系：</strong>从词条左右两侧的圆点拖到另一个词条，松手后选择关系：免疫、前提条件、阻止、抵消、优先于、附加效果、叠加上限。点中连线后按 Delete 可删除。</li>
+        <li><strong>整理画布：</strong>滚轮缩放视图，拖动空白处平移。顶栏「锁定」后画布只读，避免误触。顶栏 📝 可添加注释便签，双击便签即可编辑。</li>
+        <li><strong>检查与对比：</strong>顶栏 🔍 检查前提永不成立、关系互相矛盾、前提循环依赖和孤立词条；「更多 → 战力对比」可按属性或综合公式比较两个词条。</li>
+        <li><strong>保存与迁移：</strong>内容自动保存在本机浏览器。「更多」里可保存快照（用于撤销回退）、导出 JSON、导入 JSON、导出 PNG 截图；换设备前请先导出 JSON 备份。</li>
+        <li><strong>快捷键与 AI：</strong>Ctrl / Cmd + Z 撤销，Ctrl / Cmd + Y 重做，Delete 或 Backspace 删除选中。设置里填好接口地址、Key 与模型后，画布左上角可用 AI 对话；不配置也能使用全部手动功能。</li>
+      </ol>
+    </div>
+    <div class="actions">
+      <div class="spacer"></div>
+      <button class="tbtn ui-btn ui-btn--primary ui-btn--md" id="helpClose">知道了</button>
+    </div>
   </div>
 </div>
 
@@ -2282,6 +2317,24 @@ function initIntro(){
   document.addEventListener('keydown',e=>{if(e.key==='Escape')dismissIntro();});
   const reduce=document.documentElement.classList.contains('reduce-motion')||matchMedia('(prefers-reduced-motion: reduce)').matches;
   setTimeout(dismissIntro,reduce?400:2400);
+}
+
+/* ================= 使用说明 ================= */
+const HELP_KEY='logic-sandbox-help-seen';
+function openHelp(){
+  $('helpMask').classList.add('open');
+  try{localStorage.setItem(HELP_KEY,'1');}catch(e){}
+}
+$('helpClose').onclick=()=>$('helpMask').classList.remove('open');
+$('menuHelp').onclick=()=>{$('menuPop').classList.remove('open');openHelp();};
+/* 首次进入自动展示一次：等开场动画结束后再弹，之后只从「更多」手动打开 */
+let helpSeen=false;
+try{helpSeen=!!localStorage.getItem(HELP_KEY);}catch(e){helpSeen=false;}
+if(!helpSeen){
+  setTimeout(()=>{
+    if(document.querySelector('.mask.open')||$('menuPop').classList.contains('open'))return;
+    openHelp();
+  },3200);
 }
 
 /* ================= 启动 ================= */

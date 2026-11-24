@@ -770,13 +770,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   --neon-pink-ink:#B00F55;
 }
 
-/* 入场标志 */
-.logo-svg{color:var(--neon-pink);filter:drop-shadow(0 0 10px rgba(255,46,136,.35))}
-.intro-text::after{
-  content:"";display:block;width:56px;height:2px;margin:14px auto 0;border-radius:2px;
-  background:linear-gradient(90deg,var(--neon-pink),var(--neon-cyan));
-  box-shadow:0 0 8px rgba(255,46,136,.35);
-}
+/* 入场标志：沿用原蓝色线描，不使用霓虹色 */
 
 /* 顶栏渐变横线（保留项） */
 #topbar{position:relative}
@@ -832,6 +826,17 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 </style>
 </head>
 <body>
+
+<!-- 开场动画 -->
+<div id="intro-overlay" onclick="hideIntro()" style="cursor: pointer;" title="点击跳过">
+  <div class="logo-container">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-svg">
+      <path d="M3 19h18" />
+      <path d="M4 19V8l5 5 3-6 3 6 5-5v11" />
+    </svg>
+    <div class="intro-text">浮生小卡</div>
+  </div>
+</div>
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></symbol>
@@ -1401,6 +1406,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 'use strict';
 
 const LS_KEY = 'charcard.namecard.v2'; 
+const HELP_SEEN_KEY = 'charcard.help.seen.v1';
 const DB_NAME = 'namecard_v2';
 const DB_STORE = 'assets'; 
 
@@ -2678,8 +2684,15 @@ async function boot(){
 
   window.addEventListener('resize', () => app.renderCard());
 
-  // 开场自动展示使用说明
-  setTimeout(() => openModal('helpModal'), 2600);
+  // 使用说明仅在首次打开时自动展示一次，之后可从“帮助”手动打开
+  try {
+    if (localStorage.getItem(HELP_SEEN_KEY) !== '1') {
+      localStorage.setItem(HELP_SEEN_KEY, '1');
+      setTimeout(() => openModal('helpModal'), 2600);
+    }
+  } catch(e) {
+    setTimeout(() => openModal('helpModal'), 2600);
+  }
 }
 
 boot();
