@@ -194,6 +194,8 @@
     border:none; border-radius:9px; font-size:13.5px; cursor:pointer; text-align:left;}
   #menuPop .mi:hover{background:var(--panel2);}
   #menuPop .mi-sep{height:1px; background:var(--line); margin:6px 4px;}
+  /* 便签：PC 顶栏有按钮，菜单项只在手机端出现 */
+  #menuPop #menuNote,#menuPop #noteSep{display:none;}
   .sel-wrap{position:relative;}
   .sel-btn{width:100%; min-width:0; display:flex; justify-content:space-between; align-items:center; gap:10px;
     background:var(--panel2); border:1px solid var(--line); border-radius:11px; padding:11px 12px;
@@ -207,6 +209,9 @@
     border:none; border-radius:9px; font-size:13.5px; cursor:pointer; text-align:left; color:var(--text);}
   .sel-pop .mi:hover{background:var(--panel2);}
   .sel-pop .mi.active{color:var(--accent); font-weight:600; background:var(--accent-soft);}
+  .model-line{position:relative;}
+  .model-pop{left:auto; right:0; width:300px; max-width:100%; max-height:240px; overflow-y:auto;}
+  .model-pop .mi{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;}
   /* 战力对比 */
   .cmp-row{display:flex; gap:8px; align-items:center; margin-bottom:14px;}
   .cmp-row .sel-wrap{flex:1; min-width:0;}
@@ -251,7 +256,6 @@
   .legend{display:flex; flex-direction:column; gap:9px;}
   .legend .lg{display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted);}
   .legend .sw{width:28px; height:0; border-top:2.5px solid;}
-  #sideMask{position:fixed; inset:0; background:rgba(0,0,0,.25); z-index:15; display:none;}
 
   /* ===== 画布 ===== */
   #viewport{position:fixed; left:240px; top:54px; right:0; bottom:0; overflow:hidden;
@@ -379,15 +383,15 @@
     font-size:14px; text-align:center; pointer-events:none; z-index:5; line-height:2.1;}
 
   /* ===== 响应式 ===== */
-  #hamburger{display:none;}
   @media (max-width:768px){
-    #sidebar{transform:translateX(-100%); box-shadow:var(--shadow);}
-    #sidebar.open{transform:translateX(0);}
-    #hamburger{display:inline-flex;}
-    #viewport{left:0;}
+    :root{--side-w:clamp(112px,30vw,160px);}
+    #sidebar{width:var(--side-w); box-shadow:none;}
+    #viewport{left:var(--side-w);}
     .tbtn{padding:8px 9px;}
     .tbtn .txt{display:none;}
     #undoBtn,#redoBtn,#checkBtn,#noteBtn{display:none;}
+    #menuPop #menuNote{display:flex;}
+    #menuPop #noteSep{display:block;}
   }
   /* 轻提示 toast */
   .toast{position:fixed; left:50%; bottom:52px; transform:translateX(-50%); z-index:200;
@@ -466,7 +470,6 @@
     align-items:center; justify-content:center; font-size:var(--fs-sm);}
   .legend .lg{font-size:var(--fs-xs); gap:var(--s2);}
   .side-legend{padding-top:var(--s3);}
-  #sideMask{background:var(--scrim);}
 
   /* ===== 画布 ===== */
   #viewport{top:56px; background:var(--bg);
@@ -589,11 +592,9 @@
   #report .rh b{font-size:var(--fs-md);}
   .chat-input-row input{height:36px; border-radius:var(--r-md); font-size:var(--fs-sm); padding:0 var(--s3);}
 
-  /* 下拉、气泡与抽屉遮罩的进出过渡 */
+  /* 下拉与气泡的进出过渡 */
   @keyframes popIn{from{opacity:0; transform:translateY(-4px) scale(.985);}to{opacity:1; transform:none;}}
   #menuPop.open,.sel-pop.open,.chat-panel.open{animation:popIn .16s var(--ease);}
-  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-  #sideMask{animation:fadeIn .24s var(--ease);}
 
   /* ===== 开场动画：点阵 + 三节点连线分段描出 ===== */
   #intro{position:fixed; inset:0; z-index:9999; background:var(--bg); cursor:pointer;
@@ -633,7 +634,7 @@
     .set-line .key{width:72px;}
   }
   @media (max-width:520px){
-    #toolbar .logo,#apiBtnTop{display:none;}
+    #toolbar .logo{display:none;}
   }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.01ms!important; transition-duration:.01ms!important;}
@@ -763,6 +764,34 @@
   @media (prefers-color-scheme:dark){
     html:not([data-theme="light"]) #toolbar::after{opacity:.9;}
   }
+
+  /* ===== 手机端：侧栏常驻窄版（不折叠、无遮罩） ===== */
+  @media (max-width:768px){
+    #sidebar{padding:10px 8px; transition:none; overflow:visible;}
+    #sidebar h3,.lib-box label,.side-formula label{font-size:10px; letter-spacing:.2px;}
+    .lib-box{margin-bottom:10px;}
+    .lib-row{flex-wrap:wrap; gap:4px;}
+    .lib-row .sel-wrap{flex:1 0 100%;}
+    .lib-row .sel-btn{height:30px; padding:0 6px; font-size:12px; gap:6px;}
+    .lib-row .tbtn{flex:1; width:auto; height:30px; padding:0;}
+    .lib-row .sel-pop{right:auto; width:168px;}
+    .side-formula{margin-bottom:10px;}
+    .side-formula input,.side-search input{height:30px; padding:0 8px; font-size:12px;}
+    .side-search{margin-bottom:8px;}
+    #nodeList{gap:5px; margin-bottom:8px;}
+    .group-title{font-size:10px; margin:8px 0 4px; gap:4px;}
+    .list-item{gap:6px; padding:6px 7px; border-radius:8px; font-size:12px;}
+    .list-item:hover{transform:none;}
+    .list-item .dot{width:16px; height:16px; font-size:10px; border-radius:5px;}
+    .list-item img{width:16px!important; height:16px!important;}
+    .side-legend{padding-top:8px; max-height:34%;}
+    .legend{gap:4px;}
+    .legend .lg{font-size:10px; gap:5px; line-height:1.3;}
+    .legend .sw{width:14px;}
+    .chat-panel{max-width:calc(100% - 24px);}
+    .empty-tip{position:absolute;}
+    #report{width:min(360px, calc(100vw - var(--side-w) - 32px));}
+  }
 </style>
 </head>
 <body>
@@ -796,7 +825,6 @@
 </svg>
 
 <header id="toolbar">
-  <button class="tbtn ui-btn ui-btn--secondary ui-btn--md icon" id="hamburger" title="词条面板"><svg class="ic"><use href="#i-menu"/></svg></button>
   <div class="logo"><span class="brand-seal" aria-hidden="true">沙</span><span class="brand-copy"><strong>逻辑沙盘</strong></span></div>
   <div class="spacer"></div>
   <button class="tbtn ui-btn ui-btn--secondary ui-btn--md" id="lockBtn"><span id="lockTxt"><span class="emoji">🔒</span>锁定</span></button>
@@ -807,12 +835,11 @@
   <button class="tbtn ui-btn ui-btn--secondary ui-btn--md icon" id="undoBtn" title="撤销"><svg class="ic"><use href="#i-undo"/></svg></button>
   <button class="tbtn ui-btn ui-btn--secondary ui-btn--md icon" id="redoBtn" title="重做"><svg class="ic"><use href="#i-redo"/></svg></button>
   <button class="tbtn ui-btn ui-btn--secondary ui-btn--md icon" id="checkBtn" title="一致性检查"><span class="emoji">🔍</span></button>
-  <button class="tbtn ui-btn ui-btn--secondary ui-btn--md icon" id="apiBtnTop" title="设置"><svg class="ic"><use href="#i-gear"/></svg></button>
   <div id="menuWrap">
     <button class="tbtn ui-btn ui-btn--secondary ui-btn--md icon" id="menuBtn" title="更多"><svg class="ic"><use href="#i-more"/></svg></button>
     <div id="menuPop">
       <button class="mi" id="menuNote"><span class="emoji">📝</span> 注释便签</button>
-      <div class="mi-sep"></div>
+      <div class="mi-sep" id="noteSep"></div>
       <button class="mi" id="menuUndo"><svg class="ic ic-sm"><use href="#i-undo"/></svg> 撤销</button>
       <button class="mi" id="menuRedo"><svg class="ic ic-sm"><use href="#i-redo"/></svg> 重做</button>
       <button class="mi" id="menuCheck"><span class="emoji">🔍</span> 一致性检查</button>
@@ -829,7 +856,6 @@
   <input type="file" id="importFile" accept="application/json" hidden>
 </header>
 
-<div id="sideMask"></div>
 <aside id="sidebar">
   <div class="side-top">
   <div class="lib-box">
@@ -989,11 +1015,12 @@
           <input class="input" id="apiKey" type="password" placeholder="仅保存在本地浏览器">
           <button class="tbtn ui-btn ui-btn--secondary ui-btn--md icon" id="apiKeyToggle" type="button" title="显示 / 隐藏"><svg class="ic"><use href="#i-eye"/></svg></button>
         </div>
-        <div class="set-line"><span class="key">模型名</span>
-          <input class="input" id="apiModel" type="text" list="modelList" placeholder="例如：deepseek-chat">
+        <div class="set-line model-line"><span class="key">模型名</span>
+          <input class="input" id="apiModel" type="text" placeholder="例如：deepseek-chat">
+          <button class="tbtn ui-btn ui-btn--secondary ui-btn--md icon" id="apiModelToggle" type="button" title="选择已拉取的模型"><svg class="ic ic-sm"><use href="#i-chev"/></svg></button>
           <button class="tbtn ui-btn ui-btn--secondary ui-btn--sm" id="apiFetchModels" type="button"><svg class="ic ic-sm"><use href="#i-refresh"/></svg>拉取</button>
+          <div class="sel-pop model-pop" id="apiModelPop"></div>
         </div>
-        <datalist id="modelList"></datalist>
         <div class="set-line"><span class="key">余额</span>
           <button class="tbtn ui-btn ui-btn--secondary ui-btn--sm" id="apiFetchBalance" type="button"><svg class="ic ic-sm"><use href="#i-wallet"/></svg>查询余额</button>
           <span class="tag">接口可选</span>
@@ -1269,7 +1296,7 @@ function renderSidebar(){
     }
     it.querySelector('.nm').textContent=n.name||'未命名';
     it.querySelector('.sub').textContent=sub;
-    it.onclick=()=>{selected={type:'node',id:n.id};focusNode(n);render();closeSidebar();};
+    it.onclick=()=>{selected={type:'node',id:n.id};focusNode(n);render();};
     return it;
   }
   NODE_TYPES.forEach(t=>{
@@ -1374,11 +1401,6 @@ function positionFloatBar(){
   }
   bar.classList.add('open');
 }
-
-/* ================= 侧边栏（移动端抽屉） ================= */
-function closeSidebar(){$('sidebar').classList.remove('open');$('sideMask').style.display='none';}
-$('hamburger').onclick=()=>{$('sidebar').classList.toggle('open');$('sideMask').style.display=$('sidebar').classList.contains('open')?'block':'none';};
-$('sideMask').onclick=closeSidebar;
 
 /* ================= 世界观库管理 ================= */
 function blankLib(name){return {id:uid(),name:name,nodes:[],edges:[],notes:[],view:{x:0,y:0,scale:1},locked:true,formula:'',history:[],hIndex:-1};}
@@ -1790,7 +1812,7 @@ $('undoBtn').onclick=undo; $('redoBtn').onclick=redo;
 $('menuUndo').onclick=()=>{$('menuPop').classList.remove('open');undo();};
 $('menuRedo').onclick=()=>{$('menuPop').classList.remove('open');redo();};
 $('menuBtn').onclick=e=>{e.stopPropagation();$('menuPop').classList.toggle('open');};
-document.addEventListener('click',e=>{if(!e.target.closest('#menuWrap'))$('menuPop').classList.remove('open');if(!e.target.closest('.sel-wrap'))document.querySelectorAll('.sel-pop').forEach(p=>p.classList.remove('open'));});
+document.addEventListener('click',e=>{if(!e.target.closest('#menuWrap'))$('menuPop').classList.remove('open');if(!e.target.closest('.sel-wrap')&&!e.target.closest('#apiModelPop'))document.querySelectorAll('.sel-pop').forEach(p=>p.classList.remove('open'));});
 $('snapBtn').onclick=()=>{snapHistory();$('menuPop').classList.remove('open');alert('已保存当前快照（可撤销回退）');};
 $('exportBtn').onclick=()=>{
   $('menuPop').classList.remove('open');
@@ -2145,6 +2167,15 @@ function apiCfg(){try{const d=JSON.parse(localStorage.getItem('logic-sandbox-api
 function apiReady(){const c=apiCfg();return !!(c.url&&c.key&&c.model);}
 function refreshChatBtn(){const b=$('chatBtn'); if(b)b.classList.toggle('off',!apiReady());}
 let chatHistory=[];
+const CHAT_KEY='logic-sandbox-chat';
+function saveChat(){
+  try{localStorage.setItem(CHAT_KEY,JSON.stringify(chatHistory.slice(-60)));}catch(e){}
+}
+function loadChat(){
+  try{const d=JSON.parse(localStorage.getItem(CHAT_KEY)||'[]');chatHistory=Array.isArray(d)?d.filter(m=>m&&typeof m.content==='string'&&(m.role==='user'||m.role==='assistant')):[];}catch(e){chatHistory=[];}
+  const box=$('chatMsgs'); box.innerHTML='';
+  chatHistory.forEach(m=>addMsg(m.role==='user'?'user':'ai',m.content));
+}
 function addMsg(role,text){
   const box=$('chatMsgs'); const el=document.createElement('div');
   el.className='chat-msg'+(role==='user'?' user':' ai'); el.textContent=text;
@@ -2178,7 +2209,7 @@ function sendChat(){
   const input=$('chatInput'); const text=input.value.trim(); if(!text)return;
   if(!apiReady()){showToast('还没配置 API，请到设置页填写');return;}
   addMsg('user',text); input.value='';
-  chatHistory.push({role:'user',content:text});
+  chatHistory.push({role:'user',content:text}); saveChat();
   const cfg=apiCfg();
   const pending=addMsg('ai','思考中…'); pending.classList.add('pending');
   const messages=[{role:'system',content:buildSystemPrompt()}].concat(chatHistory);
@@ -2192,7 +2223,7 @@ function sendChat(){
     const reply=msg&&msg.content;
     if(!reply)throw new Error('返回为空');
     pending.classList.remove('pending'); pending.textContent=reply;
-    chatHistory.push({role:'assistant',content:reply});
+    chatHistory.push({role:'assistant',content:reply}); saveChat();
   }).catch(err=>{
     pending.classList.remove('pending'); pending.textContent='请求失败：'+err.message+'（可检查地址、Key、模型名或网络）';
   });
@@ -2201,6 +2232,29 @@ $('chatBtn').onclick=openChat;
 $('chatClose').onclick=closeChat;
 $('chatSend').onclick=sendChat;
 $('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)sendChat();});
+
+const MODEL_KEY='logic-sandbox-models';
+function modelStore(){try{const d=JSON.parse(localStorage.getItem(MODEL_KEY)||'{}');return d&&typeof d==='object'?d:{};}catch(e){return {};}}
+function modelIds(){const base=normBase($('apiUrl').value);const arr=modelStore()[base];return Array.isArray(arr)?arr:[];}
+function saveModelIds(ids){const base=normBase($('apiUrl').value);const d=modelStore();d[base]=ids;try{localStorage.setItem(MODEL_KEY,JSON.stringify(d));}catch(e){}}
+function renderModelPop(){
+  const pop=$('apiModelPop'); pop.innerHTML='';
+  const cur=$('apiModel').value.trim();
+  const ids=modelIds();
+  if(!ids.length){
+    const note=document.createElement('div');
+    note.className='opt-note'; note.style.padding='8px 10px';
+    note.textContent='暂无模型列表，点「拉取」从当前平台获取';
+    pop.appendChild(note); return;
+  }
+  ids.forEach(id=>{
+    const b=document.createElement('button'); b.type='button';
+    b.className='mi'+(id===cur?' active':''); b.textContent=id; b.title=id;
+    b.onclick=()=>{$('apiModel').value=id;pop.classList.remove('open');};
+    pop.appendChild(b);
+  });
+}
+$('apiModelToggle').onclick=e=>{e.stopPropagation();renderModelPop();$('apiModelPop').classList.toggle('open');};
 
 function openSettings(){
   $('menuPop').classList.remove('open');
@@ -2212,11 +2266,10 @@ function openSettings(){
   $('apiBalance').textContent=''; $('apiBalance').className='bal-text';
   $('apiKey').type='password';
   $('apiKeyToggle').innerHTML='<svg class="ic"><use href="#i-eye"/></svg>';
-  $('modelList').innerHTML='';
+  $('apiModelPop').classList.remove('open');
   $('apiMask').classList.add('open');
 }
 $('apiBtn').onclick=openSettings;
-$('apiBtnTop').onclick=openSettings;
 $('apiCancel').onclick=()=>$('apiMask').classList.remove('open');
 function setPlatform(k){
   $('apiPlatform').value=k;
@@ -2255,9 +2308,12 @@ $('apiFetchModels').onclick=()=>{
     .then(d=>{
       const arr=(d&&d.data)||d||[];
       const ids=arr.map(m=>(m&&m.id)||m).filter(Boolean);
-      const dl=$('modelList');dl.innerHTML='';
-      ids.forEach(id=>{const o=document.createElement('option');o.value=id;dl.appendChild(o);});
-      if(ids.length){if(!$('apiModel').value)$('apiModel').value=ids[0];bal.textContent='已拉取 '+ids.length+' 个模型';bal.className='bal-text ok';}
+      if(ids.length){
+        saveModelIds(ids);
+        if(!$('apiModel').value)$('apiModel').value=ids[0];
+        renderModelPop();
+        bal.textContent='已拉取 '+ids.length+' 个模型';bal.className='bal-text ok';
+      }
       else{bal.textContent='未返回模型列表';bal.className='bal-text err';}
     })
     .catch(err=>{bal.textContent='拉取失败：'+err.message+'（可能是跨域限制或地址/密钥有误）';bal.className='bal-text err';});
@@ -2339,7 +2395,7 @@ if(!helpSeen){
 
 /* ================= 启动 ================= */
 applyPrefs(); initIntro();
-load();snapHistory();render();
+load();snapHistory();render();loadChat();
 </script>
 </body>
 </html>
